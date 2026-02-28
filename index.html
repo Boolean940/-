@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" x-data="holyApp()" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نور اليقين | تلاوة و أذكار</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                screens: {
+                    'sm': '885px',
+                    'md': '1024px',
+                    'lg': '1280px',
+                    'xl': '1536px',
+                },
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        accent: '#fbbf24',
+                        darkBg: '#020617',
+                        glassWhite: 'rgba(255, 255, 255, 0.8)',
+                        glassDark: 'rgba(15, 23, 42, 0.8)'
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        amiri: ['Amiri', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Cairo', sans-serif; transition: background 0.5s ease; scroll-behavior: smooth; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .quran-text { 
+            line-height: 2.5; 
+            word-spacing: 2px;
+            word-wrap: break-word; 
+        }
+        
+        /* تحديث الـ Media Query لتبدأ من 885px */
+        @media (min-width: 885px) {
+            .quran-text { line-height: 2.8; word-spacing: 4px; }
+            ::-webkit-scrollbar { width: 6px; display: block; }
+        }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 5px; }
+
+        .mesh-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background-color: #f8fafc;
+            background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.1) 0, transparent 50%), 
+                              radial-gradient(at 100% 100%, rgba(5, 150, 105, 0.1) 0, transparent 50%);
+        }
+        .dark .mesh-bg { background-color: #020617; }
+        .rounded-5 { border-radius: 12px; }
+        .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 1rem), 1rem); }
+        *::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="text-slate-900 dark:text-slate-100 min-h-screen overflow-hidden">
+    <div class="mesh-bg"></div>
+
+    <div class="flex h-[100dvh] p-2 sm:p-4 md:p-6 gap-2 sm:gap-6 pb-20 sm:pb-6">
+        
+        <aside class="glass rounded-5 w-20 md:w-72 flex-col py-8 transition-all duration-500 hidden sm:flex shrink-0">
+            <div class="px-4 md:px-8 mb-12">
+                <div class="flex items-center gap-3 justify-center md:justify-start">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-5 flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+                        <i class="fa-solid fa-kaaba text-white text-xl md:text-2xl"></i>
+                    </div>
+                    <span class="hidden md:block font-black text-2xl tracking-tight bg-gradient-to-l from-primary to-teal-600 bg-clip-text text-transparent">نور اليقين</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-3 md:px-4 space-y-2">
+                <template x-for="item in menu">
+                    <button @click="currentView = item.id; selectedSurah = null" 
+                            :class="currentView === item.id ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'"
+                            class="w-full flex items-center justify-center md:justify-start gap-4 p-3 md:p-4 rounded-5 transition-all group">
+                        <i :class="item.icon" class="text-lg md:text-xl group-hover:scale-110 transition-transform"></i>
+                        <span class="hidden md:block font-bold text-sm" x-text="item.name"></span>
+                    </button>
+                </template>
+            </nav>
+
+            <div class="px-3 md:px-6 mt-auto">
+                <button @click="darkMode = !darkMode" class="w-full h-12 md:h-14 glass rounded-5 flex items-center justify-center gap-3 border-none shadow-none hover:bg-primary/5 transition">
+                    <i :class="darkMode ? 'fa-solid fa-sun text-yellow-500' : 'fa-solid fa-moon text-blue-500'"></i>
+                    <span class="hidden md:block text-xs font-bold" x-text="darkMode ? 'الوضع النهاري' : 'الوضع الليلي'"></span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col gap-3 sm:gap-6 overflow-hidden min-w-0">
+            
+            <header class="glass rounded-5 p-3 sm:p-4 px-4 sm:px-8 flex justify-between items-center min-h-[4rem] sm:h-20 shrink-0">
+                <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                    <div x-show="currentView === 'quran'" class="relative w-full max-w-md">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 opacity-30 text-sm sm:text-base"></i>
+                        <input type="text" x-model="searchQuery" placeholder="ابحث عن سورة..." 
+                               class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-5 py-2 pr-10 sm:pr-12 pl-2 focus:ring-2 ring-primary/50 outline-none text-xs sm:text-sm transition-all">
+                    </div>
+                    <h2 x-show="currentView !== 'quran'" class="text-lg sm:text-xl font-black truncate" x-text="getViewTitle()"></h2>
+                </div>
+                
+                <div class="flex items-center gap-3 sm:gap-6 shrink-0 pl-2">
+                    <div class="text-left hidden lg:block">
+                        <p class="text-[10px] font-bold opacity-50 uppercase">تاريخ اليوم</p>
+                        <p class="text-sm font-bold truncate" x-text="new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })"></p>
+                    </div>
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-5 bg-accent/10 flex items-center justify-center text-accent shrink-0">
+                        <i class="fa-solid fa-bell text-sm sm:text-base"></i>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 glass rounded-5 overflow-y-auto p-3 sm:p-4 md:p-8 relative">
+                
+                <div x-show="currentView === 'home'" x-transition class="space-y-4 sm:space-y-8">
+                    <div class="relative h-40 sm:h-64 rounded-5 overflow-hidden group">
+                        <img src="https://www.travelzoo.com/images/blog/2021/12/29/iStock-516214379-bluemosque-istanbul.jpg?width=412&spr=3" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="background">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4 sm:p-10 text-white">
+                            <h1 class="text-2xl sm:text-4xl font-black mb-1 sm:mb-2 truncate">مرحباً بك في نور اليقين</h1>
+                            <p class="opacity-90 font-amiri text-sm sm:text-2xl italic">"وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ"</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                        <template x-for="stat in quickStats">
+                            <div class="glass p-4 sm:p-6 rounded-5 border-b-4 border-primary hover:-translate-y-1 sm:hover:-translate-y-2 transition duration-300 flex flex-col items-center sm:items-start text-center sm:text-right">
+                                <div :class="stat.bg" class="w-10 h-10 sm:w-12 sm:h-12 rounded-5 flex items-center justify-center mb-2 sm:mb-4">
+                                    <i :class="stat.icon" class="text-white text-sm sm:text-base"></i>
+                                </div>
+                                <h4 class="font-bold opacity-60 text-xs sm:text-sm" x-text="stat.label"></h4>
+                                <p class="text-lg sm:text-2xl font-black truncate" x-text="stat.value"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="currentView === 'quran' && !selectedSurah" x-transition>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        <template x-for="surah in filteredSurahs">
+                            <div @click="loadSurah(surah.number)" class="glass p-3 sm:p-5 rounded-5 hover:bg-primary transition-all cursor-pointer group flex justify-between items-center border border-transparent hover:border-white/20">
+                                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                                    <div class="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-5 bg-primary/10 group-hover:bg-white/20 flex items-center justify-center text-primary group-hover:text-white font-black text-sm sm:text-base" x-text="surah.number"></div>
+                                    <div class="min-w-0">
+                                        <h5 class="font-bold text-lg sm:text-xl font-amiri group-hover:text-white truncate" x-text="surah.name"></h5>
+                                        <p class="text-[9px] sm:text-[10px] opacity-60 uppercase group-hover:text-white/70 truncate" x-text="surah.englishName + ' • ' + surah.numberOfAyahs + ' آيات'"></p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-play-circle text-xl sm:text-2xl opacity-0 group-hover:opacity-100 transition-all text-white shrink-0"></i>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="selectedSurah" x-transition class="max-w-4xl mx-auto pb-6 sm:pb-32">
+                    <button @click="selectedSurah = null" class="mb-6 sm:mb-8 flex items-center gap-2 sm:gap-3 font-bold text-primary hover:gap-4 sm:hover:gap-5 transition-all text-sm sm:text-base">
+                        <i class="fa-solid fa-arrow-right"></i> العودة للمصحف
+                    </button>
+                    
+                    <div class="text-center mb-8 sm:mb-12">
+                        <h2 class="text-3xl sm:text-5xl font-amiri font-bold mb-2 sm:mb-4 text-primary" x-text="surahData?.name"></h2>
+                        <div class="flex justify-center gap-2 opacity-60 text-xs sm:text-sm font-bold">
+                            <span x-text="surahData?.revelationType === 'Meccan' ? 'مكية' : 'مدنية'"></span>
+                            <span>•</span>
+                            <span x-text="surahData?.numberOfAyahs + ' آيات'"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <template x-for="ayah in surahData?.ayahs">
+                            <div class="glass p-4 sm:p-8 rounded-5 relative group hover:shadow-xl transition-all">
+                                <div class="flex justify-between items-start mb-4 sm:mb-6">
+                                    <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-5 bg-primary/10 text-primary flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0" x-text="ayah.numberInSurah"></span>
+                                    <div class="flex gap-2 sm:gap-3 shrink-0">
+                                        <button @click="copyAyah(ayah.text)" class="text-slate-300 hover:text-primary transition p-1"><i class="fa-solid fa-copy text-sm sm:text-base"></i></button>
+                                        <button @click="toggleBookmark(ayah)" 
+                                                :class="isBookmarked(ayah) ? 'text-red-500' : 'text-slate-300 hover:text-red-400'"
+                                                class="transition-colors p-1">
+                                            <i class="fa-solid fa-heart text-sm sm:text-xl"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="font-amiri text-right quran-text select-all" 
+                                   :style="'font-size: ' + (window.innerWidth < 885 ? fontSize * 0.7 : fontSize) + 'px'" x-text="ayah.text"></p>
+                                <div x-show="showTranslation" class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-200 dark:border-white/5 text-slate-500 font-light text-xs sm:text-sm" x-text="ayah.translation"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="currentView === 'athkar'" x-transition class="max-w-4xl mx-auto">
+                    <div x-show="!selectedAthkarCategory" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <template x-for="(list, key) in allAthkarData">
+                            <div @click="selectedAthkarCategory = key" class="glass p-6 sm:p-10 rounded-5 cursor-pointer hover:bg-primary/5 border-2 border-transparent hover:border-primary/20 transition group flex flex-col items-center text-center">
+                                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-5 bg-primary/10 flex items-center justify-center text-primary mb-4 sm:mb-6 group-hover:scale-110 transition shrink-0">
+                                    <i class="fa-solid fa-hands-praying text-xl sm:text-2xl"></i>
+                                </div>
+                                <h3 class="text-xl sm:text-2xl font-black mb-1 sm:mb-2 truncate w-full" x-text="key"></h3>
+                                <p class="opacity-50 text-xs sm:text-sm" x-text="list.length + ' أذكار واردة'"></p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div x-show="selectedAthkarCategory" class="space-y-4 sm:space-y-6">
+                        <button @click="selectedAthkarCategory = null" class="font-bold text-primary mb-2 sm:mb-4 text-sm sm:text-base"><i class="fa-solid fa-arrow-right ml-2"></i> العودة</button>
+                        <template x-for="(thekr, index) in allAthkarData[selectedAthkarCategory]">
+                            <div class="glass p-5 sm:p-8 rounded-5 text-center flex flex-col items-center">
+                                <p class="text-lg sm:text-2xl font-amiri leading-relaxed mb-6 sm:mb-8 w-full" x-text="thekr.text"></p>
+                                <div class="flex flex-col items-center gap-3 sm:gap-4">
+                                    <div class="relative w-20 h-20 sm:w-24 sm:h-24">
+                                        <svg class="w-full h-full -rotate-90">
+                                            <circle cx="50%" cy="50%" r="35%" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-200 dark:text-slate-800" />
+                                            <circle cx="50%" cy="50%" r="35%" stroke="currentColor" stroke-width="8" fill="transparent" 
+                                                    class="text-primary transition-all duration-500"
+                                                    :stroke-dasharray="2 * Math.PI * (window.innerWidth < 885 ? 28 : 34)"
+                                                    :stroke-dashoffset="2 * Math.PI * (window.innerWidth < 885 ? 28 : 34) * (1 - (thekr.currentCount / thekr.originalCount))" />
+                                        </svg>
+                                        <button @click="if(thekr.currentCount > 0) thekr.currentCount--" 
+                                                class="absolute inset-0 flex items-center justify-center text-xl sm:text-2xl font-black hover:scale-110 transition active:scale-95">
+                                            <span x-text="thekr.currentCount"></span>
+                                        </button>
+                                    </div>
+                                    <span class="text-[9px] sm:text-[10px] font-black uppercase opacity-40">اضغط للعد</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="currentView === 'favorites'" x-transition class="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+                    <template x-if="bookmarks.length === 0">
+                        <div class="text-center opacity-50 py-12 sm:py-20">
+                            <i class="fa-solid fa-heart text-3xl sm:text-4xl mb-3 sm:mb-4"></i>
+                            <p class="font-bold text-sm sm:text-base">لا توجد آيات محفوظة بعد</p>
+                        </div>
+                    </template>
+                    <template x-for="(fav, index) in bookmarks" :key="fav.number">
+                        <div class="glass p-4 sm:p-8 rounded-5 relative">
+                            <div class="flex justify-between items-start mb-4 sm:mb-6">
+                                <span class="text-[10px] sm:text-xs opacity-50 font-bold" x-text="fav.surahName"></span>
+                                <button @click="bookmarks = bookmarks.filter((_, i) => i !== index)"
+                                        class="text-red-500 hover:scale-110 transition p-1">
+                                    <i class="fa-solid fa-trash text-sm sm:text-base"></i>
+                                </button>
+                            </div>
+                            <p class="font-amiri text-lg sm:text-2xl leading-loose" x-text="fav.text"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <footer class="glass rounded-5 p-2 px-4 flex flex-col md:flex-row items-center gap-2 sm:gap-4 shrink-0 z-10">
+                <div class="flex items-center gap-2 sm:gap-3 w-full md:w-1/4">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-5 flex items-center justify-center text-primary shrink-0">
+                        <i class="fa-solid fa-microphone-lines text-base"></i>
+                    </div>
+                    <div class="overflow-hidden w-full text-right">
+                        <p class="text-[9px] font-black opacity-40 uppercase mb-0.5">يتلو الآن</p>
+                        <p class="font-bold text-primary text-xs sm:text-sm truncate" x-text="surahData?.name || 'اختر سورة للبدء'"></p>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center gap-1.5 w-full">
+                    <div class="flex items-center">
+                        <button @click="toggleAudio()" class="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white rounded-5 flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-110 active:scale-95 transition">
+                            <i :class="isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play'" class="text-xs sm:text-sm"></i>
+                        </button>
+                    </div>
+                    <div class="w-full flex items-center gap-2">
+                        <span class="text-[9px] font-bold opacity-40 w-8 text-left shrink-0" x-text="formatTime(currentTime)"></span>
+                        <div class="flex-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-5 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-primary transition-all duration-300" :style="'width: ' + audioProgress + '%'"></div>
+                        </div>
+                        <span class="text-[9px] font-bold opacity-40 w-8 shrink-0" x-text="formatTime(duration)"></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-1/4 pt-1.5 md:pt-0 border-t md:border-t-0 border-slate-200/20">
+                    <button @click="showSettings = !showSettings" class="w-7 h-7 sm:w-8 sm:h-8 glass rounded-5 flex items-center justify-center text-slate-500 hover:text-primary transition shrink-0">
+                        <i class="fa-solid fa-gear text-xs sm:text-sm"></i>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <input type="range" x-model="volume" min="0" max="1" step="0.1" class="accent-primary h-1 w-16 sm:w-20">
+                        <i class="fa-solid fa-volume-low opacity-40 text-xs"></i>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <nav class="sm:hidden fixed bottom-0 left-0 w-full glass z-50 rounded-t-2xl flex justify-around items-center p-2 pb-safe border-t border-slate-200 dark:border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+        <template x-for="item in menu">
+            <button @click="currentView = item.id; selectedSurah = null" 
+                    :class="currentView === item.id ? 'text-primary scale-110' : 'text-slate-400'"
+                    class="flex flex-col items-center justify-center p-2 w-14 rounded-xl transition-all duration-300">
+                <i :class="item.icon" class="text-xl mb-1"></i>
+                <span class="text-[9px] font-bold truncate w-full text-center" x-show="currentView === item.id" x-text="item.name"></span>
+            </button>
+        </template>
+    </nav>
+
+    <div x-show="showSettings" x-transition x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div @click.away="showSettings = false" class="glass max-w-sm w-full p-6 sm:p-8 rounded-5 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 sm:mb-8">
+                <h3 class="text-lg sm:text-xl font-black">إعدادات العرض</h3>
+                <button @click="showSettings = false" class="text-slate-400 hover:text-red-500 transition p-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-xs font-black opacity-50 block mb-3">حجم خط الآيات (<span x-text="fontSize"></span>px)</label>
+                    <input type="range" x-model="fontSize" min="20" max="50" class="w-full accent-primary">
+                </div>
+                <div class="flex justify-between items-center p-4 glass rounded-5 border-none">
+                    <span class="text-xs sm:text-sm font-bold">إظهار الترجمة</span>
+                    <button @click="showTranslation = !showTranslation" :class="showTranslation ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'" class="w-12 h-6 rounded-full relative transition-colors">
+                        <div :class="showTranslation ? 'translate-x-6' : 'translate-x-1'" class="absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform shadow-sm"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function holyApp() {
+            return {
+                darkMode: localStorage.getItem('darkMode') === 'true',
+                currentView: 'home',
+                searchQuery: '',
+                selectedSurah: null,
+                surahData: null,
+                selectedAthkarCategory: null,
+                showTranslation: true,
+                fontSize: 28,
+                showSettings: false,
+                bookmarks: JSON.parse(localStorage.getItem('holy_bookmarks') || '[]'),
+                surahs: [],
+                audio: new Audio(),
+                isPlaying: false,
+                duration: 0,
+                currentTime: 0,
+                audioProgress: 0,
+                volume: 0.7,
+                quickStats: [
+                    { label: 'المفضلة', value: 0, icon: 'fa-solid fa-heart', bg: 'bg-red-500' },
+                    { label: 'السور', value: 114, icon: 'fa-solid fa-book', bg: 'bg-primary' },
+                    { label: 'الأذكار', value: '2', icon: 'fa-solid fa-hands-praying', bg: 'bg-accent' },
+                    { label: 'القارئ', value: 'العفاسي', icon: 'fa-solid fa-microphone', bg: 'bg-blue-500' }
+                ],
+                menu: [
+                    { id: 'home', name: 'الرئيسية', icon: 'fa-solid fa-house-chimney' },
+                    { id: 'quran', name: 'المصحف', icon: 'fa-solid fa-book-open' },
+                    { id: 'athkar', name: 'الأذكار', icon: 'fa-solid fa-hands-praying' },
+                    { id: 'favorites', name: 'المفضلة', icon: 'fa-solid fa-heart' }
+                ],
+                allAthkarData: {
+                    "أذكار الصباح": [
+                        { text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ.", originalCount: 1, currentCount: 1 },
+        { text: "أَصْبَحْنَا عَلَى فِطْرَةِ الإِسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ... (آيَةُ الْكُرْسِيِّ).", originalCount: 1, currentCount: 1 },
+        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ هُوَ اللَّهُ أَحَدٌ... (سُورَةُ الإِخْلاَصِ).", originalCount: 3, currentCount: 3 },
+        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ... (سُورَةُ الْفَلَقِ).", originalCount: 3, currentCount: 3 },
+        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ النَّاسِ... (سُورَةُ النَّاسِ).", originalCount: 3, currentCount: 3 },
+        { text: "اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لا يَغْفِرُ الذُّنُوبَ إِلا أَنْتَ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لاَ إِلَهَ إِلاَّ أَنْتَ وَحْدَكَ لاَ شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ.", originalCount: 4, currentCount: 4 },
+        { text: "اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَهَ إِلاَّ أَنْتَ.", originalCount: 3, currentCount: 3 },
+        { text: "حَسْبِيَ اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ.", originalCount: 7, currentCount: 7 },
+        { text: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي.", originalCount: 1, currentCount: 1 },
+        { text: "بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.", originalCount: 3, currentCount: 3 },
+        { text: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.", originalCount: 3, currentCount: 3 },
+        { text: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.", originalCount: 1, currentCount: 1 },
+        { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ: عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ، وَمِدَادَ كَلِمَاتِهِ.", originalCount: 3, currentCount: 3 },
+        { text: "لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 10, currentCount: 10 },
+        { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.", originalCount: 100, currentCount: 100 },
+        { text: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ.", originalCount: 100, currentCount: 100 }
+                    ],
+                    "أذكار المساء": [
+                       { text: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ.", originalCount: 1, currentCount: 1 },
+        { text: "أَمْسَيْنَا عَلَى فِطْرَةِ الإِسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ... (آيَةُ الْكُرْسِيِّ).", originalCount: 1, currentCount: 1 },
+        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ هُوَ اللَّهُ أَحَدٌ... (سُورَةُ الإِخْلاَصِ).", originalCount: 3, currentCount: 3 },
+        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ... (سُورَةُ الْفَلَقِ).", originalCount: 3, currentCount: 3 },
+        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ النَّاسِ... (سُورَةُ النَّاسِ).", originalCount: 3, currentCount: 3 },
+        { text: "اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لا يَغْفِرُ الذُّنُوبَ إِلا أَنْتَ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لاَ إِلَهَ إِلاَّ أَنْتَ وَحْدَكَ لاَ شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ.", originalCount: 4, currentCount: 4 },
+        { text: "اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَهَ إِلاَّ أَنْتَ.", originalCount: 3, currentCount: 3 },
+        { text: "حَسْبِيَ اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ.", originalCount: 7, currentCount: 7 },
+        { text: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي.", originalCount: 1, currentCount: 1 },
+        { text: "بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.", originalCount: 3, currentCount: 3 },
+        { text: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.", originalCount: 3, currentCount: 3 },
+        { text: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.", originalCount: 1, currentCount: 1 },
+        { text: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.", originalCount: 3, currentCount: 3 },
+        { text: "لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 10, currentCount: 10 },
+        { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.", originalCount: 100, currentCount: 100 },
+        { text: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ.", originalCount: 100, currentCount: 100 }
+                    ]
+                },
+                async init() {
+                    const res = await fetch('https://api.alquran.cloud/v1/surah');
+                    const data = await res.json();
+                    this.surahs = data.data;
+                    this.quickStats[0].value = this.bookmarks.length;
+
+                    this.$watch('darkMode', val => {
+                        localStorage.setItem('darkMode', val);
+                        if(val) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                    });
+                    if(this.darkMode) document.documentElement.classList.add('dark');
+                    this.$watch('bookmarks', val => {
+                        localStorage.setItem('holy_bookmarks', JSON.stringify(val));
+                        this.quickStats[0].value = val.length;
+                    });
+                    this.$watch('volume', val => this.audio.volume = val);
+                    this.audio.ontimeupdate = () => {
+                        this.currentTime = this.audio.currentTime;
+                        this.duration = this.audio.duration;
+                        this.audioProgress = (this.currentTime / this.duration) * 100;
+                    };
+                    this.audio.onended = () => this.isPlaying = false;
+                },
+                get filteredSurahs() {
+                    return this.surahs.filter(s => s.name.includes(this.searchQuery) || s.englishName.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                },
+                async loadSurah(num) {
+                    this.selectedSurah = num;
+                    const res = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,en.asad`);
+                    const data = await res.json();
+                    const ar = data.data[0];
+                    const en = data.data[1];
+                    this.surahData = {
+                        ...ar,
+                        ayahs: ar.ayahs.map((a, i) => ({
+                            ...a,
+                            translation: en.ayahs[i].text
+                        }))
+                    };
+                    this.audio.src = `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${num}.mp3`;
+                    this.isPlaying = false;
+                    this.audioProgress = 0;
+                    this.currentTime = 0;
+                },
+                toggleAudio() {
+                    if (this.audio.src && this.audio.src !== window.location.href) {
+                        if (this.isPlaying) this.audio.pause();
+                        else this.audio.play();
+                        this.isPlaying = !this.isPlaying;
+                    }
+                },
+                formatTime(seconds) {
+                    if (isNaN(seconds) || !isFinite(seconds)) return "00:00";
+                    const min = Math.floor(seconds / 60);
+                    const sec = Math.floor(seconds % 60);
+                    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                },
+                copyAyah(text) {
+                    navigator.clipboard.writeText(text);
+                },
+                toggleBookmark(ayah) {
+                    const idx = this.bookmarks.findIndex(b => b.number === ayah.number && b.surahNumber === this.selectedSurah);
+                    if (idx > -1) this.bookmarks.splice(idx, 1);
+                    else this.bookmarks.push({ number: ayah.number, surahNumber: this.selectedSurah, surahName: this.surahData.name, text: ayah.text });
+                },
+                isBookmarked(ayah) {
+                    return this.bookmarks.some(b => b.number === ayah.number && b.surahNumber === this.selectedSurah);
+                },
+                getViewTitle() {
+                    if (this.currentView === 'quran' && this.selectedSurah) return this.surahData?.name;
+                    return this.menu.find(m => m.id === this.currentView)?.name || '';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

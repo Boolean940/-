@@ -1,178 +1,676 @@
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                screens: {
-                    'sm': '885px',
-                    'md': '1024px',
-                    'lg': '1280px',
-                    'xl': '1536px',
-                },
-                extend: {
-                    colors: {
-                        primary: '#10b981',
-                        accent: '#fbbf24',
-                        darkBg: '#020617',
-                        glassWhite: 'rgba(255, 255, 255, 0.8)',
-                        glassDark: 'rgba(15, 23, 42, 0.8)'
-                    },
-                    fontFamily: {
-                        cairo: ['Cairo', 'sans-serif'],
-                        amiri: ['Amiri', 'serif']
+  window.tailwind.config = { darkMode: 'class', theme: { screens: { 'sm': '885px', 'md': '1024px', 'lg': '1280px', 'xl': '1536px' }, extend: { colors: { primary: '#10b981', accent: '#fbbf24', darkBg: '#020617' }, fontFamily: { cairo: ['Cairo', 'sans-serif'], amiri: ['Amiri', 'serif'] } } } };
+
+    function holyApp() {
+        return {
+            darkMode: localStorage.getItem('darkMode') === 'true',
+            currentView: 'home',
+            searchQuery: '',
+            selectedSurah: null,
+            surahData: null,
+            selectedAthkarCategory: null,
+            showTranslation: true,
+            showTafsir: false,
+            fontSize: 28,
+            showSettings: false,
+            bookmarks: JSON.parse(localStorage.getItem('holy_bookmarks') || '[]'),
+            surahs: [],
+            // Quran search
+            loadingQuran: false,
+            allVerses: [],      // will store normalized text and original
+            verseSearchResults: [],
+            // Audio
+            audio: new Audio(),
+            isPlaying: false,
+            currentAyahIndex: 0,
+            volume: 0.7,
+            selectedReciter: localStorage.getItem('holy_reciter') || 'ar.alafasy',
+            currentTime: 0,
+            duration: 0,
+            // Practice
+            practiceMode: false,
+            revealedAyahs: [],
+            recitingAyah: null,
+            practiceModeChoice: localStorage.getItem('practiceModeChoice') || 'single',
+            fullSurahTestActive: false,
+            testPassedAyahs: [],
+            currentTestAyahIndex: 0,
+            surahTestCompleted: false,
+            waitingForRecording: false,
+            // Prophets
+            selectedProphet: null,
+            prophetsList: [
+                { name: "آدم عليه السلام", story: "آدم هو أبو البشرية وأول الأنبياء، خلقه الله تعالى بيديه من طين، ونفخ فيه روحه، وأسكنه الجنة. ثم أمر الملائكة بالسجود له فسجدوا إلا إبليس أبى واستكبر. ثم خلق الله حواء من ضلعه لتكون زوجة وسكناً له. وأسكنهما الجنة وأباح لهما الأكل من جميع ثمارها إلا شجرة واحدة ونهاهما عن الاقتراب منها. فوسوس لهما الشيطان وأكلا من الشجرة فعصيا ربهما. تاب الله عليهما وقبل توبتهما، ثم أهبطهما إلى الأرض ليعمرها ويتكاثر فيها. وتعلم آدم من ربه كلمات التوبة، وتلقى منها الألوهية والعبادة. وعاش آدم على الأرض ألف سنة، ورزق بالعديد من الأبناء، وكان من أشهرهم هابيل وقابيل، وشيث الذي جعله وصياً من بعده. توفي آدم في يوم الجمعة، ودفن في غار بجبل أبي قبيس. وكان آدم نبياً مكلماً، وقد ورد ذكره في القرآن في مواضع كثيرة، وعلم الله الأسماء كلها، وفضله على كثير من خلقه.", quranRefs: ["سورة البقرة (30-39)", "سورة الأعراف (11-25)", "سورة طه (115-123)", "سورة ص (71-85)"] },
+                { name: "إدريس عليه السلام", story: "إدريس عليه السلام هو نبي من أنبياء الله الصالحين، وهو من ذرية آدم، وكان قبل الطوفان. اختلف في نسبه، لكنه معروف بالصدق والصلاح. رفع الله مكانته، وآتاه النبوة والحكمة. كان أول من خط بالقلم، وأول من خاط الثياب ولبسها، وكان كثير الصيام والعبادة. عاش في عصر كان الناس فيه قد ضلوا عن طريق الحق، فدعاهم إلى الله وعبادته وحده، وعلمهم الحكمة والمنطق. رفع الله درجته في السماء الرابعة، كما ورد في حديث الإسراء والمعراج. كان معروفاً بالعلم والفضل، وذكره الله في كتابه العزيز: \"وَاذْكُرْ فِي الْكِتَابِ إِدْرِيسَ إِنَّهُ كَانَ صِدِّيقًا نَبِيًّا. وَرَفَعْنَاهُ مَكَانًا عَلِيًّا\" (مريم 56-57). توفي وهو في السماء بعد أن رفعه الله إليه.", quranRefs: ["سورة مريم (56-57)", "سورة الأنبياء (85)"] },
+                { name: "نوح عليه السلام", story: "نوح عليه السلام هو أول رسول بعثه الله إلى أهل الأرض بعد أن انتشر الشرك والكفر. أرسله الله إلى قومه ليدعوهم إلى التوحيد وعبادة الله وحده. لبث في قومه ألف سنة إلا خمسين عاماً يدعوهم ليلاً ونهاراً، سراً وعلانية، فلم يؤمن معه إلا قليل. استمر في الدعوة مع الصبر على أذى قومه، فطلبوا منه المعجزات، ودعا عليهم أن ينجيه الله منهم. فأوحى الله إليه أن اصنع الفلك (السفينة) بأمره، ووعده بأنه سينجيه ومن معه. فصنع السفينة، ولما جاء أمر الله وفار التنور، حمل فيها من كل زوجين اثنين، وأهله ومن آمن معه. وجاء الطوفان العظيم فأغرق الكافرين، وكان ابن نوح من الكافرين فغرق. استقرت السفينة على الجودي، وبارك الله في ذرية نوح. عاش نوح بعده عمراً طويلاً، ودفن في مكة أو في مسجد الكوفة. وهو من أولي العزم من الرسل.", quranRefs: ["سورة نوح كاملة", "سورة هود (25-48)", "سورة المؤمنون (23-30)", "سورة العنكبوت (14-15)"] },
+                { name: "هود عليه السلام", story: "هود عليه السلام هو نبي أرسل إلى قبيلة عاد في منطقة الأحقاف (اليمن). كان قومه عاداً من أقوى الأمم وأشدهم بطشاً، وكانوا يعبدون الأصنام، ويسخرون من دعوته. دعاهم هود إلى عبادة الله وحده، ونهاهم عن الظلم والطغيان، وحذرهم من عذاب الله. لكنهم كذبوه واستكبروا، وقالوا له: \"أجئتنا لنعبد الله وحده؟\"، وأصروا على كفرهم. فدعا عليهم بالعذاب، فأرسل الله عليهم ريحاً صرصراً عاتية، أهلكتهم وأصبحوا لا يُرى إلا مساكنهم خاوية. نجى الله هوداً ومن آمن معه، وذهبوا إلى مكة أو إلى حضرموت. قصة هود واردة في عدة سور، وهو نبي صابر وصادق.", quranRefs: ["سورة هود (50-60)", "سورة الأعراف (65-72)", "سورة الشعراء (123-140)"] },
+                { name: "صالح عليه السلام", story: "صالح عليه السلام أرسل إلى ثمود، وهم قوم عاد الثانية، وكانوا في وادي القرى بين الحجاز والشام. كانوا نحاتين في الجبال، ويعبدون الأصنام. دعاهم صالح إلى التوحيد، فطلبوا منه آية أن يخرج لهم ناقة من صخرة. فدعا الله فأخرج لهم ناقة عظيمة، وأمرهم أن يتركوها تشرب يومها ويشربوا يومهم، وحذرهم من أن يمسوها بسوء. لكنهم عقروها بعد أن تكبروا، فأصبحوا نادمين، وأرسل الله عليهم صيحة ورجفة أهلكتهم. نجا صالح ومن آمن معه. وسميت الناقة آية من آيات الله، وأصبحت ثمود عبرة لمن بعدهم.", quranRefs: ["سورة هود (61-68)", "سورة الأعراف (73-79)", "سورة الشعراء (141-159)"] },
+                { name: "إبراهيم عليه السلام", story: "إبراهيم عليه السلام هو خليل الله، وأبو الأنبياء. ولد في زمن النمرود بن كنعان، وكان قومه يعبدون الكواكب والأصنام. فبحث عن الحق حتى اهتدى إلى التوحيد. دعا قومه إلى عبادة الله وحده، وحطم الأصنام في غيابهم، فأرادوا إحراقه، فجعل الله النار برداً وسلاماً. هاجر من بابل إلى الشام ثم إلى مصر، وتزوج من هاجر وسارة. رزق بإسماعيل من هاجر، وبإسحاق من سارة. ابتلاه الله بذبح ابنه إسماعيل فاستجاب، وفداه الله بذبح عظيم. بنى الكعبة مع إسماعيل، ودعا الناس إلى الحج. نزلت عليه الصحف، وأقام الحنيفية. وهو من أولي العزم، وأب للأنبياء، وخلاصة قصته في القرآن أن الله اتخذه خليلاً، ورفع مقامه.", quranRefs: ["سورة البقرة (124-132)", "سورة الأنبياء (51-73)", "سورة الصافات (83-113)", "سورة إبراهيم (35-41)"] },
+                { name: "لوط عليه السلام", story: "لوط عليه السلام هو ابن أخي إبراهيم، أرسل إلى قوم في سدوم وعمورة (فلسطين) كانوا يأتون الفاحشة (اللواط) ويعترضون السبيل. دعاهم إلى الله، ونهاهم عن الفاحشة والظلم. لكنهم كذبوه واستهزأوا به، وقالوا: \"أخرجوا آل لوط من قريتكم\". فأرسل الله ملائكة إلى إبراهيم يبشرونه بإسحاق ويعقوب، ثم أرسلهم إلى لوط. خاف لوط من قومه، فأمرته الملائكة أن يخرج هو وأهله ليلاً، ولا يلتفتوا، وأن زوجته ستكون من الهالكين. فخرجوا، وأمطر الله على القوم حجارة من سجيل فأهلكهم. نجا لوط وبناته، وذهبوا إلى الشام. قصة لوط عبرة للمعتدين.", quranRefs: ["سورة هود (77-83)", "سورة الأعراف (80-84)", "سورة الشعراء (160-175)"] },
+                { name: "إسماعيل عليه السلام", story: "إسماعيل عليه السلام هو ابن إبراهيم من هاجر، ولد بعد هجرة إبراهيم إلى مكة. لما كان رضيعاً، تركته أمه هاجر في واد غير ذي زرع، وأمر الله لهما بماء زمزم. ثم أتت جرهم وسكنت معهما. نشأ إسماعيل وترعرع، وأتقن العربية. عندما كبر، أمر الله إبراهيم بذبحه فاستجاب، وفداه الله بكبش عظيم. بنى إسماعيل مع أبيه الكعبة، ونادى بالحج. تزوج من قبيلة جرهم، ورزق اثني عشر ولداً، هم أصول العرب العدنانيين. وكان نبياً صادق الوعد، ذكر في القرآن مع الأنبياء.", quranRefs: ["سورة مريم (54-55)", "سورة البقرة (125-129)", "سورة الصافات (100-113)"] },
+                { name: "إسحاق عليه السلام", story: "إسحاق عليه السلام هو ابن إبراهيم من سارة، ولد بعد أن كبرت سارة، بشرت به الملائكة. كان نبياً، وورث النبوة بعد أبيه. أنجب يعقوب الذي هو إسرائيل، وله ذرية الأنبياء. عاش في فلسطين، ودعا إلى الله. ورد ذكره في القرآن مع أبيه وإسماعيل. وكان من الصالحين.", quranRefs: ["سورة هود (71)", "سورة الصافات (112-113)", "سورة البقرة (133)"] },
+                { name: "يعقوب عليه السلام", story: "يعقوب عليه السلام هو ابن إسحاق، واسمه إسرائيل. ولد في فلسطين، وله اثنا عشر ابناً هم أسباط بني إسرائيل. عاش في كنعان، وأحب ولده يوسف كثيراً، فحسده إخوته وألقوه في الجب. فصبر يعقوب على فراقه، وابتلي بالحزن حتى ابيضت عيناه. وبشر بالفرج، فعاد إليه يوسف وأهله، ودخلوا مصر. عاش يعقوب سنواته الأخيرة في مصر، وأوصى بنيه بالتمسك بالدين. وهو نبي من أنبياء الله.", quranRefs: ["سورة يوسف (4-102)", "سورة البقرة (133)", "سورة مريم (49)"] },
+                { name: "يوسف عليه السلام", story: "يوسف عليه السلام هو ابن يعقوب، وكان أحب الولد إليه، فألقاه إخوته في الجب بسبب الغيرة. مرت به قافلة فأخرجوه وباعوه عبداً في مصر. اشتراه عزيز مصر، وربته زوجته، لكنها راودته عن نفسه، فامتنع، فسجن ظلماً. مكث في السجن سنوات، ثم أوتي علم تأويل الأحلام، ففسر حلم الملك، وأخرجه من السجن وولاه خزائن الأرض. ثم قدم إخوته وأبوه فجمع شمله. نال الحكمة والنبوة، وعاش في مصر، وأوصى بنيه بالتوحيد. قصته من أحسن القصص في القرآن.", quranRefs: ["سورة يوسف كاملة"] },
+                { name: "أيوب عليه السلام", story: "أيوب عليه السلام نبي من نسل عيسو، كان غنياً ذا مال وولد، وكان شاكراً لله، فابتلاه الله في ماله وولده وجسده، فأصيب بمرض شديد، وابتعد عنه الناس إلا زوجته. صبر أيوب صبراً جميلاً، ولم يشك إلى الله إلا أن الضر مسه، فكشف الله عنه ضره، ورد إليه صحته وماله وولده. كان أيوب مثلاً في الصبر والرضا بقضاء الله. ورد ذكره في القرآن مع الأنبياء الصابرين.", quranRefs: ["سورة ص (41-44)", "سورة الأنبياء (83-84)"] },
+                { name: "شعيب عليه السلام", story: "شعيب عليه السلام أرسل إلى أهل مدين (شمال الحجاز) وإلى أصحاب الأيكة (الغابة). كانوا يعبدون الأصنام، وينقصون المكيال والميزان، ويقطعون الطريق. دعاهم إلى التوحيد والعدل، ونهاهم عن التطفيف. فكذبوه، فهددهم بالعذاب. أخذتهم الرجفة فأهلكتهم، ونجا شعيب ومن آمن معه. وهو نبي خطيب الأنبياء، وفصيح اللسان. ورد ذكره في عدة مواضع.", quranRefs: ["سورة هود (84-95)", "سورة الأعراف (85-93)", "سورة الشعراء (176-191)"] },
+                { name: "موسى عليه السلام", story: "موسى عليه السلام هو كليم الله، أرسل إلى فرعون وملئه. ولد في زمن فرعون، وألقته أمه في اليم، فالتقطه آل فرعون وتربى في القصر. قتل رجلاً خطأً فهرب إلى مدين، وتزوج هناك، وبعثه الله نبياً بعد ذلك. ذهب إلى فرعون بالآيات، فكذبه وسحرته، فأرسل الله الطوفان والجراد والقمل والدم. ثم خرج موسى ببني إسرائيل، وشق الله لهم البحر، وأغرق فرعون وجنوده. ثم أنزل الله عليهم التوراة، وأوحى إليه الأحكام. وقاد بني إسرائيل أربعين عاماً في التيه، وتوفي في أرض الشام. وهو من أولي العزم.", quranRefs: ["سورة طه (9-98)", "سورة القصص (3-46)", "سورة الأعراف (103-162)"] },
+                { name: "هارون عليه السلام", story: "هارون عليه السلام هو أخو موسى، أرسل معه لساناً يبين، وكان وزيراً ونبياً. ساند موسى في دعوته، وعينه موسى خليفة على بني إسرائيل عند ذهابه لمناجاة ربه. لما صنع السامري العجل، حاول هارون أن يمنعهم، فلم يطيعوه. وبعد عودة موسى، عفا عنه ودعا له. وكان هارون نبياً صالحاً، ومات في التيه قبل موسى. ورد ذكره في القرآن مع موسى.", quranRefs: ["سورة طه (29-36)", "سورة مريم (53)", "سورة الأعراف (142-150)"] },
+                { name: "داود عليه السلام", story: "داود عليه السلام نبي وملك بني إسرائيل، أوتي الزبور، وكان يملك قوة بدنية وإيمانية. قتل جالوت، فآتاه الله الملك والنبوة. كان يصوم يوماً ويفطر يوماً، ويقوم الليل. وسخر الله له الجبال والطيور تسبح معه. وكان حكماً في القضاء، وقصته مع الخصمين معروفة. ورث الحكم والنبوة لابنه سليمان. وهو من أولي العزم.", quranRefs: ["سورة ص (17-26)", "سورة البقرة (251)", "سورة سبأ (10-11)"] },
+                { name: "سليمان عليه السلام", story: "سليمان عليه السلام ابن داود، ورث النبوة والملك، وسخر الله له الريح والجن والشياطين، وعلم منطق الطير. بنى المسجد الأقصى، وكان له ملك عظيم. عرف بقصة الهدهد مع بلقيس ملكة سبأ، وأسلمت على يديه. حكم بالعدل، وعاش حتى مات على كرسيه. وردت قصته في سورة النمل والسبأ. وهو نبي عظيم.", quranRefs: ["سورة النمل (15-44)", "سورة سبأ (12-14)", "سورة ص (30-40)"] },
+                { name: "إلياس عليه السلام", story: "إلياس عليه السلام أرسل إلى قومه في بعلبك (لبنان)، وكانوا يعبدون الصنم \"بعل\"، فدعاهم إلى عبادة الله وحده. فكذبوه، فدعا عليهم، فأنزل الله عذاباً. ونجا إلياس، ثم رفع. ورد ذكره في سورة الصافات.", quranRefs: ["سورة الصافات (123-132)"] },
+                { name: "اليسع عليه السلام", story: "اليسع عليه السلام كان نبيًا من أنبياء بني إسرائيل بعد إلياس، عاش في الشام، وجدد دعوة التوحيد، وذكر مع الأنبياء في سورة ص والأنعام. لم تذكر تفاصيل كثيرة عن حياته في القرآن، لكنه كان من الصالحين.", quranRefs: ["سورة ص (48)", "سورة الأنعام (86)"] },
+                { name: "يونس عليه السلام", story: "يونس بن متى (ذو النون) أرسل إلى قومه في نينوى (العراق)، فكذبوه، فخرج مغاضباً وذهب إلى البحر، فركب سفينة، فالتقمه الحوت، فسبح في بطنه، ودعا ربه: \"لا إله إلا أنت سبحانك إني كنت من الظالمين\"، فاستجاب الله له ونجاه. ثم أرسل مرة أخرى إلى قومه فآمنوا. وردت قصته في سورة الصافات والأنبياء.", quranRefs: ["سورة الصافات (139-148)", "سورة الأنبياء (87-88)", "سورة يونس (98)"] },
+                { name: "ذو الكفل عليه السلام", story: "ذو الكفل عليه السلام هو نبي صالح، قيل أنه كان كفيلاً لأبناء الأنبياء، أو أنه رجل صالح من بني إسرائيل. ورد اسمه في القرآن مع الصالحين، ولم تذكر قصته بالتفصيل.", quranRefs: ["سورة الأنبياء (85)", "سورة ص (48)"] },
+                { name: "زكريا عليه السلام", story: "زكريا عليه السلام نبي من بني إسرائيل، كفيل مريم بنت عمران. دعا ربه أن يرزقه ذرية مع كبر سنه، فبشر بيحيى. كان نجاراً، وقاتل في سبيل الله، وله معجزات. قُتل في محرابه. ورد ذكره في سورة مريم وآل عمران.", quranRefs: ["سورة مريم (2-11)", "سورة آل عمران (37-41)"] },
+                { name: "يحيى عليه السلام", story: "يحيى عليه السلام ابن زكريا، ولد بعد دعوة أبيه، وأوتي الحكم صبياً، وكان سيداً وحصوراً، نبياً من الصالحين. دعا إلى الله، وأمر بالمعروف ونهى عن المنكر، وقتل على يد الملك الظالم. ورد ذكره في سورة مريم والأنبياء.", quranRefs: ["سورة مريم (12-15)", "سورة آل عمران (39)", "سورة الأنبياء (90)"] },
+                { name: "عيسى عليه السلام", story: "عيسى ابن مريم عليه السلام، هو رسول الله وكلمته ألقاها إلى مريم، ورُوح منه. ولد من أم بلا أب، وآتاه الله الإنجيل، وأيده بالروح القدس، وأجرى على يديه المعجزات: إحياء الموتى، وإبراء الأكمه والأبرص، والإخبار بالغيب. رفعه الله إليه، ولم يقتل ولم يصلب. سينزل في آخر الزمان ليحكم بشريعة محمد صلى الله عليه وسلم، ويقتل الدجال. وهو من أولي العزم.", quranRefs: ["سورة مريم (16-36)", "سورة آل عمران (45-59)", "سورة المائدة (110-118)"] },
+                { name: "محمد ﷺ", story: "محمد بن عبد الله صلى الله عليه وسلم، هو خاتم النبيين والمرسلين، أرسل بالهدى ودين الحق إلى الناس كافة. ولد في مكة، ونزل عليه القرآن، ودعا إلى الإسلام، وهاجر إلى المدينة، وأقام الدولة الإسلامية، وفتح مكة، وأكمل الدين. أوتي جوامع الكلم، وحشرت له الأرض، وأعطي الشفاعة العظمى. هو صاحب المقام المحمود، وأفضل الخلق. ورد اسمه في القرآن، وأمر باتباعه.", quranRefs: ["سورة الفتح (29)", "سورة الأحزاب (40)", "سورة محمد (2)", "سورة الحشر (10)"] }
+            ],
+            reciters: [ { id: 'ar.alafasy', name: 'مشاري العفاسي' }, { id: 'ar.abdulbasitmurattal', name: 'عبد الباسط عبد الصمد' }, { id: 'ar.ahmedajamy', name: 'أحمد العجمي' }, { id: 'ar.mahermuaiqly', name: 'ماهر المعيقلي' }, { id: 'ar.minshawi', name: 'محمد صديق المنشاوي' }, { id: 'ar.abdurrahmaansudais', name: 'عبد الرحمن السديس' }, { id: 'ar.muhammadayyoub', name: 'محمد أيوب' } ],
+            quickStats: [ { id: 'favs', label: 'المفضلة', value: 0, icon: 'fa-solid fa-heart', bg: 'bg-red-500' }, { id: 'surahs', label: 'السور', value: 114, icon: 'fa-solid fa-book', bg: 'bg-primary' }, { id: 'athkar', label: 'الأذكار', value: '2', icon: 'fa-solid fa-hands-praying', bg: 'bg-accent' }, { id: 'reciter', label: 'القارئ', value: '', icon: 'fa-solid fa-microphone', bg: 'bg-blue-500' } ],
+            menu: [ { id: 'home', name: 'الرئيسية', icon: 'fa-solid fa-house-chimney' }, { id: 'quran', name: 'المصحف', icon: 'fa-solid fa-book-open' }, { id: 'athkar', name: 'الأذكار', icon: 'fa-solid fa-hands-praying' }, { id: 'prophets', name: 'قصص الأنبياء', icon: 'fa-solid fa-users' }, { id: 'favorites', name: 'المفضلة', icon: 'fa-solid fa-heart' } ],
+            allAthkarData: {
+    "أذكار النوم": [
+        
+        { text: "بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي، وَبِكَ أَرْفَعُهُ، فَإِنْ أَمْسَكْتَ نَفْسِي فَارْحَمْهَا، وَإِنْ أَرْسَلْتَهَا فَاحْفَظْهَا بِمَا تَحْفَظُ بِهِ عِبَادَكَ الصَّالِحِينَ.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ خَلَقْتَ نَفْسِي وَأَنْتَ تَوَفَّاهَا، لَكَ مَمَاتُهَا وَمَحْيَاهَا، إِنْ أَحْيَيْتَهَا فَاحْفَظْهَا، وَإِنْ أَمَتَّهَا فَاغْفِرْ لَهَا.", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ.", originalCount: 3, currentCount: 3 },
+        { text: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا.", originalCount: 1, currentCount: 1 },
+        { text: "سُبْحَانَ اللَّهِ", originalCount: 33, currentCount: 33 },
+        { text: "الْحَمْدُ لِلَّهِ", originalCount: 33, currentCount: 33 },
+        { text: "اللَّهُ أَكْبَرُ", originalCount: 34, currentCount: 34 },
+        { text: "آية الكرسي: (اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ...)", originalCount: 1, currentCount: 1 },
+        { text: "سورة الإخلاص", originalCount: 3, currentCount: 3 },
+        { text: "سورة الفلق", originalCount: 3, currentCount: 3 },
+        { text: "سورة الناس", originalCount: 3, currentCount: 3 },
+        { text: "آمن الرسول بما أنزل إليه من ربه والمؤمنون... (خواتيم البقرة)", originalCount: 1, currentCount: 1 },
+        { text: "سورة الملك (المنجية من عذاب القبر)", originalCount: 1, currentCount: 1 },
+        { text: "سورة الكافرون (براءة من الشرك)", originalCount: 1, currentCount: 1 },
+        { text: "اللَّهُمَّ أَسْلَمْتُ نَفْسِي إِلَيْكَ، وَفَوَّضْتُ أَمْرِي إِلَيْكَ، وَوَجَّهْتُ وَجْهِي إِلَيْكَ، وَأَلْجَأْتُ ظَهْرِي إِلَيْكَ...", originalCount: 1, currentCount: 1 },
+        { text: "اللهم رب السماوات السبع ورب الأرض، ورب العرش العظيم، ربنا ورب كل شيء...", originalCount: 1, currentCount: 1 },
+        { text: "الحمد لله الذي أطعمنا وسقانا، وكفانا، وآوانا، فكم ممن لا كافي له ولا مؤوي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم عالم الغيب والشهادة فاطر السماوات والأرض، رب كل شيء ومليكه، أشهد أن لا إله إلا أنت...", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بوجهك الكريم وكلماتك التامة من شر ما أنت آخذ بناصيته.", originalCount: 1, currentCount: 1 },
+        { text: "أستغفر الله الذي لا إله إلا هو الحي القيوم وأتوب إليه.", originalCount: 3, currentCount: 3 },
+        { text: "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.", originalCount: 10, currentCount: 10 },
+        { text: "اللهم أنت ربي لا إله إلا أنت، خلقتني وأنا عبدك، وأنا على عهدك ووعدك ما استطعت.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعل في قلبي نوراً، وفي بصري نوراً، وفي سمعي نوراً.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم فاطر السموات والأرض عالم الغيب والشهادة رب كل شيء ومليكه.", originalCount: 1, currentCount: 1 },
+        { text: "يا حي يا قيوم برحمتك أستغيث أصلح لي شأني كله.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم عافني في بدني، اللهم عافني في سمعي، اللهم عافني في بصري.", originalCount: 3, currentCount: 3 },
+        { text: "اللهم إني أعوذ بك من الكفر والفقر، وأعوذ بك من عذاب القبر.", originalCount: 3, currentCount: 3 },
+        { text: "اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك العافية في الدنيا والآخرة.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم استر عوراتي وآمن روعاتي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم احفظني من بين يدي ومن خلفي وعن يميني وعن شمالي.", originalCount: 1, currentCount: 1 },
+        { text: "أعوذ بكلمات الله التامات من شر ما خلق.", originalCount: 3, currentCount: 3 },
+        { text: "اللهم صل وسلم على نبينا محمد.", originalCount: 10, currentCount: 10 },
+        { text: "سبحان الله وبحمده عدد خلقه ورضا نفسه وزنة عرشه.", originalCount: 3, currentCount: 3 },
+        { text: "رضيت بالله رباً وبالإسلام ديناً وبمحمد صلى الله عليه وسلم نبياً.", originalCount: 3, currentCount: 3 },
+        { text: "يا ربي لك الحمد كما ينبغي لجلال وجهك ولعظيم سلطانك.", originalCount: 3, currentCount: 3 },
+        { text: "سبحان الله وبحمده، سبحان الله العظيم.", originalCount: 10, currentCount: 10 },
+        { text: "اللهم إني أعوذ بك من الهم والحزن، والعجز والكسل.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من الجبن والبخل، وغلبة الدين وقهر الرجال.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم ما أصبح بي من نعمة أو بأحد من خلقك فمنك وحدك لا شريك لك.", originalCount: 1, currentCount: 1 },
+        { text: "حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم.", originalCount: 7, currentCount: 7 },
+        { text: "بسم الله الذي لا يضر مع اسمه شيء في الأرض ولا في السماء.", originalCount: 3, currentCount: 3 },
+        { text: "اللهم إني أصبحت أشهدك وأشهد حملة عرشك وملائكتك.", originalCount: 4, currentCount: 4 },
+        { text: "اللهم إني أسألك علماً نافعاً ورزقاً طيباً وعملاً متقبلاً.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم أنت ربي لا إله إلا أنت عليك توكلت وأنت رب العرش العظيم.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من شر نفسي ومن شر كل دابة أنت آخذ بناصيتها.", originalCount: 1, currentCount: 1 },
+        { text: "تحصنت بذي العزة والجبروت واعتصمت برب الملكوت.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اصرف عني السوء بما شئت وكيف شئت.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم قني شر نفسي واعزم لي على أرشد أمري.", originalCount: 1, currentCount: 1 },
+        { text: "سبحان الملك القدوس (3 مرات).", originalCount: 3, currentCount: 3 }
+    ],
+
+    "أذكار الصلاة": [
+        { text: "أستغفر الله", originalCount: 3, currentCount: 3 },
+        { text: "اللهم أنت السلام ومنك السلام تباركت يا ذا الجلال والإكرام.", originalCount: 1, currentCount: 1 },
+        { text: "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم لا مانع لما أعطيت، ولا معطي لما منعت، ولا ينفع ذا الجد منك الجد.", originalCount: 1, currentCount: 1 },
+        { text: "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد يحيي ويميت وهو على كل شيء قدير (10 مرات بعد الفجر والمغرب).", originalCount: 10, currentCount: 10 },
+        { text: "اللهم أعني على ذكرك وشكرك وحسن عبادتك.", originalCount: 1, currentCount: 1 },
+        { text: "سُبْحَانَ اللَّهِ", originalCount: 33, currentCount: 33 },
+        { text: "الْحَمْدُ لِلَّهِ", originalCount: 33, currentCount: 33 },
+        { text: "اللَّهُ أَكْبَرُ", originalCount: 33, currentCount: 33 },
+        { text: "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير (تمام المائة).", originalCount: 1, currentCount: 1 },
+        { text: "آية الكرسي بعد كل صلاة.", originalCount: 1, currentCount: 1 },
+        { text: "سورة الإخلاص (مرة بعد كل صلاة، و3 بعد الفجر والمغرب).", originalCount: 1, currentCount: 1 },
+        { text: "سورة الفلق (مرة بعد كل صلاة، و3 بعد الفجر والمغرب).", originalCount: 1, currentCount: 1 },
+        { text: "سورة الناس (مرة بعد كل صلاة، و3 بعد الفجر والمغرب).", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من الجبن، وأعوذ بك أن أرد إلى أرذل العمر.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من فتنة الدنيا، وأعوذ بك من عذاب القبر.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اغفر لي ذنوبي وخطاياي كلها.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم نقني من الخطايا كما ينقى الثوب الأبيض من الدنس.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اغسلني من خطاياي بالماء والثلج والبرد.", originalCount: 1, currentCount: 1 },
+        { text: "رب اجعلني مقيم الصلاة ومن ذريتي ربنا وتقبل دعاء.", originalCount: 1, currentCount: 1 },
+        { text: "ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة وقنا عذاب النار.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك الهدى والتقى والعفاف والغنى.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم مصرف القلوب صرف قلوبنا على طاعتك.", originalCount: 1, currentCount: 1 },
+        { text: "يا مقلب القلوب ثبت قلبي على دينك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك حبك وحب من يحبك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعل خير عمري آخره، وخير عملي خواتيمه.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك الجنة وأعوذ بك من النار.", originalCount: 3, currentCount: 3 },
+        { text: "اللهم إني أعوذ بك من زوال نعمتك وتحول عافيتك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من فجاءة نقمتك وجميع سخطك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم لك الحمد كله، وإليك يرجع الأمر كله.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من منكرات الأخلاق والأعمال والأهواء.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك من خير ما سألك منه نبيك محمد.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من شر ما استعاذ منه نبيك محمد.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعلني لك شاكراً، لك ذاكراً، لك راهباً.", originalCount: 1, currentCount: 1 },
+        { text: "ربي تقبل توبتي، واغسل حوبتي، وأجب دعوتي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اهدي قلبي، وسدد لساني، واسلل سخيمة صدري.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك العفو والعافية في ديني ودنياي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم استر عوراتي وآمن روعاتي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم احفظني من بين يدي ومن خلفي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من العجز والكسل والجبن والبخل وهرم وعذاب القبر.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم آت نفسي تقواها وزكها أنت خير من زكاها.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من علم لا ينفع ومن قلب لا يخشع.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من نفس لا تشبع ومن دعوة لا يستجاب لها.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم أصلح لي ديني الذي هو عصمة أمري.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم أصلح لي دنياي التي فيها معاشي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم أصلح لي آخرتي التي فيها معادي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعل الحياة زيادة لي في كل خير.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعل الموت راحة لي من كل شر.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك الهدى والسداد.", originalCount: 1, currentCount: 1 },
+        { text: "سبحان ربك رب العزة عما يصفون وسلام على المرسلين.", originalCount: 1, currentCount: 1 }
+    ],
+
+    "أذكار السفر": [
+        { text: "الله أكبر، الله أكبر، الله أكبر.", originalCount: 1, currentCount: 1 },
+        { text: "سُبْحانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ وَإِنَّا إِلَى رَبِّنَا لَمُنْقَلِبُونَ.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إنا نسألك في سفرنا هذا البر والتقوى، ومن العمل ما ترضى.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم هون علينا سفرنا هذا واطو عنا بعده.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم أنت الصاحب في السفر والخليفة في الأهل.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من وعثاء السفر، وكآبة المنظر، وسوء المنقلب في المال والأهل.", originalCount: 1, currentCount: 1 },
+        { text: "آيبون تائبون عابدون لربنا حامدون (عند الرجوع).", originalCount: 1, currentCount: 1 },
+        { text: "أستودع الله دينك وأمانتك وخواتيم عملك.", originalCount: 1, currentCount: 1 },
+        { text: "زودك الله التقوى، وغفر ذنبك، ويسر لك الخير حيثما كنت.", originalCount: 1, currentCount: 1 },
+        { text: "بسم الله توكلت على الله ولا حول ولا قوة إلا بالله.", originalCount: 1, currentCount: 1 },
+        { text: "أعوذ بكلمات الله التامات من شر ما خلق (عند النزول بمكان).", originalCount: 3, currentCount: 3 },
+        { text: "الله أكبر (عند صعود المرتفعات).", originalCount: 1, currentCount: 1 },
+        { text: "سبحان الله (عند نزول المنخفضات).", originalCount: 1, currentCount: 1 },
+        { text: "دعاء دخول القرية: اللهم رب السماوات السبع وما أظللن، ورب الأراضين السبع وما أقللن...", originalCount: 1, currentCount: 1 },
+        { text: "بسم الله، اللهم إني أسألك خير هذه القرية وخير أهلها.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم بارك لنا فيها (3 مرات).", originalCount: 3, currentCount: 3 },
+        { text: "اللهم ارزقنا جناها وحببنا إلى أهلها.", originalCount: 1, currentCount: 1 },
+        { text: "بسم الله ولجنا، وبسم الله خرجنا، وعلى ربنا توكلنا.", originalCount: 1, currentCount: 1 },
+        { text: "رب أنزلني منزلاً مباركاً وأنت خير المنزلين.", originalCount: 1, currentCount: 1 },
+        { text: "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد يحيي ويميت وهو على كل شيء قدير.", originalCount: 10, currentCount: 10 },
+        { text: "اللهم إني أسألك من فضل العظيم في سفري هذا.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم احفظني من كل سوء في طريقي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم يسر لي أمري واشرح لي صدري.", originalCount: 1, currentCount: 1 },
+        { text: "يا أرض ربي وربك الله، أعوذ بالله من شرك وشر ما فيك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من أسد وأسود، ومن الحية والعقرب.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من ساكن البلد، ومن والد وما ولد.", originalCount: 1, currentCount: 1 },
+        { text: "سبحان الذي في السماء عرشه، سبحان الذي في الأرض سلطانه.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعلنا في كنفك وأمانك في هذا السفر.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إنا نعوذ بك من جور السفر وسوء المنقلب.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم أنت الرفيق في الطريق.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك السلامة لي ولمن معي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اطوِ لنا الأرض ويسر لنا المسير.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إنا نسألك التوفيق والنجاح في مقصدنا.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعل سفرنا هذا زيادة لنا في الإيمان.", originalCount: 1, currentCount: 1 },
+        { text: "لا حول ولا قوة إلا بالله العلي العظيم.", originalCount: 10, currentCount: 10 },
+        { text: "اللهم ارزقنا توبة نصوحة قبل الموت.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك الثبات في الأمر والعزيمة على الرشد.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من الهم والحزن في غربتي.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم حبب إلينا الإيمان وزينه في قلوبنا.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اكفني بحلالك عن حرامك وأغنني بفضلك عمن سواك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك نفساً بك مطمئنة تؤمن بلقائك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعلنا من المتوكلين عليك حق توكلك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أعوذ بك من شر ما عملت ومن شر ما لم أعمل.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك الهدى والتقى والعفاف والغنى.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم أصلح لي شأني كله ولا تكلني إلى نفسي طرفة عين.", originalCount: 1, currentCount: 1 },
+        { text: "يا مقلب القلوب ثبت قلبي على دينك.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اجعلني صبوراً واجعلني شكوراً.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم اهدني لأحسن الأخلاق لا يهدي لأحسنها إلا أنت.", originalCount: 1, currentCount: 1 },
+        { text: "اللهم إني أسألك الجنة وما قرب إليها من قول وعمل.", originalCount: 1, currentCount: 1 },
+        { text: "سبحان الله وبحمده عدد خلقه ورضا نفسه.", originalCount: 3, currentCount: 3 }
+    ],
+    "سنن مهجورة": [
+        { text: "السواك: (السواك مطهرة للفم مرضاة للرب).", originalCount: 1, currentCount: 1 },
+        { text: "صلاة ركعتين بعد الوضوء.", originalCount: 1, currentCount: 1 },
+        { text: "البدء باليمين في اللبس والتنعل.", originalCount: 1, currentCount: 1 },
+        { text: "المضمضة والاستنشاق من غرفة واحدة.", originalCount: 1, currentCount: 1 },
+        { text: "الجلوس عند الشرب.", originalCount: 1, currentCount: 1 },
+        { text: "التنفس خارج الإناء ثلاثاً أثناء الشرب.", originalCount: 1, currentCount: 1 },
+        { text: "صلاة الضحى (صلاة الأوابين).", originalCount: 1, currentCount: 1 },
+        { text: "إفشاء السلام على من عرفت ومن لم تعرف.", originalCount: 1, currentCount: 1 },
+        { text: "سجدة الشكر عند تجدد النعم.", originalCount: 1, currentCount: 1 },
+        { text: "نفض الفراش قبل النوم.", originalCount: 1, currentCount: 1 },
+        { text: "النوم على وضوء.", originalCount: 1, currentCount: 1 },
+        { text: "قراءة سورة الكافرون قبل النوم.", originalCount: 1, currentCount: 1 },
+        { text: "قول: (سبحانك اللهم وبحمدك أشهد أن لا إله إلا أنت...) بعد المجلس.", originalCount: 1, currentCount: 1 },
+        { text: "المشي حافياً أحياناً.", originalCount: 1, currentCount: 1 },
+        { text: "عيادة المريض.", originalCount: 1, currentCount: 1 },
+        { text: "تغيير مكان الصلاة بين الفريضة والنافلة.", originalCount: 1, currentCount: 1 },
+        { text: "صلاة ركعتين عند القدوم من السفر في المسجد.", originalCount: 1, currentCount: 1 },
+        { text: "الاستخارة في الأمور كلها.", originalCount: 1, currentCount: 1 },
+        { text: "التشهد بعد الوضوء.", originalCount: 1, currentCount: 1 },
+        { text: "الدعاء بين الأذان والإقامة.", originalCount: 1, currentCount: 1 },
+        { text: "استخدام اليد اليمنى في الأكل.", originalCount: 1, currentCount: 1 },
+        { text: "لعق الأصابع بعد الأكل.", originalCount: 1, currentCount: 1 },
+        { text: "صيام الأيام البيض (13، 14، 15).", originalCount: 1, currentCount: 1 },
+        { text: "صيام الإثنين والخميس.", originalCount: 1, currentCount: 1 },
+        { text: "المصافحة عند اللقاء.", originalCount: 1, currentCount: 1 },
+        { text: "التبسم في وجه الأخ.", originalCount: 1, currentCount: 1 },
+        { text: "إماطة الأذى عن الطريق.", originalCount: 1, currentCount: 1 },
+        { text: "كف الصبيان عند أول الليل.", originalCount: 1, currentCount: 1 },
+        { text: "تغطية الإناء وإيكاء السقاء في الليل.", originalCount: 1, currentCount: 1 },
+        { text: "إطفاء المصابيح عند النوم.", originalCount: 1, currentCount: 1 },
+        { text: "البدء بالوضوء عند الغسل.", originalCount: 1, currentCount: 1 },
+        { text: "الدعاء عند صياح الديكة.", originalCount: 1, currentCount: 1 },
+        { text: "التعوذ عند نهيق الحمار.", originalCount: 1, currentCount: 1 },
+        { text: "تشميت العاطس.", originalCount: 1, currentCount: 1 },
+        { text: "تحية المسجد عند دخوله.", originalCount: 1, currentCount: 1 },
+        { text: "المواظبة على السنن الرواتب.", originalCount: 1, currentCount: 1 },
+        { text: "الاضطجاع على الشق الأيمن بعد سنة الفجر.", originalCount: 1, currentCount: 1 },
+        { text: "تخليل الأصابع في الوضوء.", originalCount: 1, currentCount: 1 },
+        { text: "الدعاء عند نزول المطر.", originalCount: 1, currentCount: 1 },
+        { text: "التبكير لصلاة الجمعة.", originalCount: 1, currentCount: 1 },
+        { text: "إعطاء الطريق حقه.", originalCount: 1, currentCount: 1 },
+        { text: "الدعاء بظهر الغيب للمسلمين.", originalCount: 1, currentCount: 1 },
+        { text: "مسح أثر النوم عن الوجه عند الاستيقاظ.", originalCount: 1, currentCount: 1 },
+        { text: "الاستياك عند دخول المنزل.", originalCount: 1, currentCount: 1 },
+        { text: "التكبير عند رؤية الهلال.", originalCount: 1, currentCount: 1 },
+        { text: "صلة الأرحام.", originalCount: 1, currentCount: 1 },
+        { text: "زيارة القبور للعبرة.", originalCount: 1, currentCount: 1 },
+        { text: "إعانة الرجل أهله في البيت.", originalCount: 1, currentCount: 1 },
+        { text: "صلاة الوتر قبل النوم.", originalCount: 1, currentCount: 1 },
+        { text: "تقديم الرجل اليمنى عند دخول المسجد واليسرى عند الخروج.", originalCount: 1, currentCount: 1 }
+    ]
+            },
+            // Function to normalize Arabic text by removing diacritics and normalizing letters
+            normalizeArabic(text) {
+                // Remove all diacritics (tashkeel)
+                let normalized = text.replace(/[\u064B-\u065F\u0670]/g, '');
+                // Normalize alif variations
+                normalized = normalized.replace(/[أإآ]/g, 'ا');
+                // Normalize ya with dots
+                normalized = normalized.replace(/[يى]/g, 'ي');
+                // Normalize waw with hamza
+                normalized = normalized.replace(/ؤ/g, 'و');
+                // Normalize alif maqsura
+                normalized = normalized.replace(/ة/g, 'ه');
+                // Remove extra spaces
+                normalized = normalized.replace(/\s+/g, ' ').trim();
+                return normalized;
+            },
+
+            async init() {
+                try { const res = await fetch('https://api.alquran.cloud/v1/surah'); const data = await res.json(); this.surahs = data.data; } catch(e) { console.error(e); }
+                this.audio.addEventListener('ended', () => { if (this.fullSurahTestActive && !this.surahTestCompleted && !this.waitingForRecording) { this.waitingForRecording = true; this.startListeningForCurrentAyah(); } else if (!this.fullSurahTestActive) this.playNextAyah(); });
+                this.audio.addEventListener('timeupdate', () => { this.currentTime = this.audio.currentTime; this.duration = this.audio.duration || 0; });
+                this.$watch('volume', v => this.audio.volume = v); this.$watch('darkMode', v => localStorage.setItem('darkMode', v)); this.$watch('bookmarks', v => { localStorage.setItem('holy_bookmarks', JSON.stringify(v)); this.quickStats[0].value = v.length; });
+                this.$watch('practiceModeChoice', v => localStorage.setItem('practiceModeChoice', v)); this.quickStats[0].value = this.bookmarks.length; this.audio.volume = this.volume;
+                await this.loadQuranForSearch();
+            },
+
+            async loadQuranForSearch() {
+                this.loadingQuran = true;
+                try {
+                    const res = await fetch('https://api.alquran.cloud/v1/quran/quran-uthmani');
+                    const data = await res.json();
+                    const surahsData = data.data.surahs;
+                    this.allVerses = [];
+                    for (let surah of surahsData) {
+                        for (let ayah of surah.ayahs) {
+                            const originalText = ayah.text;
+                            const normalizedText = this.normalizeArabic(originalText);
+                            this.allVerses.push({
+                                surahNumber: surah.number,
+                                surahName: surah.name,
+                                ayahNumber: ayah.numberInSurah,
+                                text: originalText,
+                                normalizedText: normalizedText,
+                                key: `${surah.number}:${ayah.numberInSurah}`
+                            });
+                        }
                     }
-                }
-            }
-        }
+                } catch(e) { console.error("Failed to load Quran for search", e); alert("فشل تحميل القرآن للبحث، سيتم استخدام البحث في السور فقط."); }
+                this.loadingQuran = false;
+            },
 
+            performVerseSearch() {
+                if (!this.searchQuery.trim() || !this.allVerses.length) { this.verseSearchResults = []; return; }
+                const q = this.searchQuery.trim().toLowerCase();
+                const normalizedQuery = this.normalizeArabic(q);
+                this.verseSearchResults = this.allVerses.filter(v => v.normalizedText.includes(normalizedQuery)).slice(0, 50);
+            },
 
-        function holyApp() {
-            return {
-                darkMode: localStorage.getItem('darkMode') === 'true',
-                currentView: 'home',
-                searchQuery: '',
-                selectedSurah: null,
-                surahData: null,
-                selectedAthkarCategory: null,
-                showTranslation: true,
-                fontSize: 28,
-                showSettings: false,
-                bookmarks: JSON.parse(localStorage.getItem('holy_bookmarks') || '[]'),
-                surahs: [],
-                audio: new Audio(),
-                isPlaying: false,
-                duration: 0,
-                currentTime: 0,
-                audioProgress: 0,
-                volume: 0.7,
-                quickStats: [
-                    { label: 'المفضلة', value: 0, icon: 'fa-solid fa-heart', bg: 'bg-red-500' },
-                    { label: 'السور', value: 114, icon: 'fa-solid fa-book', bg: 'bg-primary' },
-                    { label: 'الأذكار', value: '2', icon: 'fa-solid fa-hands-praying', bg: 'bg-accent' },
-                    { label: 'القارئ', value: 'العفاسي', icon: 'fa-solid fa-microphone', bg: 'bg-blue-500' }
-                ],
-                menu: [
-                    { id: 'home', name: 'الرئيسية', icon: 'fa-solid fa-house-chimney' },
-                    { id: 'quran', name: 'المصحف', icon: 'fa-solid fa-book-open' },
-                    { id: 'athkar', name: 'الأذكار', icon: 'fa-solid fa-hands-praying' },
-                    { id: 'favorites', name: 'المفضلة', icon: 'fa-solid fa-heart' }
-                ],
-                allAthkarData: {
-                    "أذكار الصباح": [
-                        { text: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ.", originalCount: 1, currentCount: 1 },
-        { text: "أَصْبَحْنَا عَلَى فِطْرَةِ الإِسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ... (آيَةُ الْكُرْسِيِّ).", originalCount: 1, currentCount: 1 },
-        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ هُوَ اللَّهُ أَحَدٌ... (سُورَةُ الإِخْلاَصِ).", originalCount: 3, currentCount: 3 },
-        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ... (سُورَةُ الْفَلَقِ).", originalCount: 3, currentCount: 3 },
-        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ النَّاسِ... (سُورَةُ النَّاسِ).", originalCount: 3, currentCount: 3 },
-        { text: "اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لا يَغْفِرُ الذُّنُوبَ إِلا أَنْتَ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لاَ إِلَهَ إِلاَّ أَنْتَ وَحْدَكَ لاَ شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ.", originalCount: 4, currentCount: 4 },
-        { text: "اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَهَ إِلاَّ أَنْتَ.", originalCount: 3, currentCount: 3 },
-        { text: "حَسْبِيَ اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ.", originalCount: 7, currentCount: 7 },
-        { text: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي.", originalCount: 1, currentCount: 1 },
-        { text: "بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.", originalCount: 3, currentCount: 3 },
-        { text: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.", originalCount: 3, currentCount: 3 },
-        { text: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.", originalCount: 1, currentCount: 1 },
-        { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ: عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ، وَمِدَادَ كَلِمَاتِهِ.", originalCount: 3, currentCount: 3 },
-        { text: "لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 10, currentCount: 10 },
-        { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.", originalCount: 100, currentCount: 100 },
-        { text: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ.", originalCount: 100, currentCount: 100 }
-                    ],
-                    "أذكار المساء": [
-                       { text: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ.", originalCount: 1, currentCount: 1 },
-        { text: "أَمْسَيْنَا عَلَى فِطْرَةِ الإِسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ... (آيَةُ الْكُرْسِيِّ).", originalCount: 1, currentCount: 1 },
-        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ هُوَ اللَّهُ أَحَدٌ... (سُورَةُ الإِخْلاَصِ).", originalCount: 3, currentCount: 3 },
-        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ... (سُورَةُ الْفَلَقِ).", originalCount: 3, currentCount: 3 },
-        { text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ النَّاسِ... (سُورَةُ النَّاسِ).", originalCount: 3, currentCount: 3 },
-        { text: "اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لا يَغْفِرُ الذُّنُوبَ إِلا أَنْتَ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لاَ إِلَهَ إِلاَّ أَنْتَ وَحْدَكَ لاَ شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ.", originalCount: 4, currentCount: 4 },
-        { text: "اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ.", originalCount: 1, currentCount: 1 },
-        { text: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَهَ إِلاَّ أَنْتَ.", originalCount: 3, currentCount: 3 },
-        { text: "حَسْبِيَ اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ.", originalCount: 7, currentCount: 7 },
-        { text: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي.", originalCount: 1, currentCount: 1 },
-        { text: "بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.", originalCount: 3, currentCount: 3 },
-        { text: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.", originalCount: 3, currentCount: 3 },
-        { text: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.", originalCount: 1, currentCount: 1 },
-        { text: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.", originalCount: 3, currentCount: 3 },
-        { text: "لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", originalCount: 10, currentCount: 10 },
-        { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.", originalCount: 100, currentCount: 100 },
-        { text: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ.", originalCount: 100, currentCount: 100 }
-                    ]
-                },
-                async init() {
-                    const res = await fetch('https://api.alquran.cloud/v1/surah');
-                    const data = await res.json();
-                    this.surahs = data.data;
-                    this.quickStats[0].value = this.bookmarks.length;
+            openVerseInSurah(surahNumber, ayahNumber) {
+                this.loadSurah(surahNumber);
+                const checkExist = setInterval(() => {
+                    const el = document.getElementById(`ayah-${ayahNumber}`);
+                    if (el) {
+                        clearInterval(checkExist);
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 200);
+                setTimeout(() => clearInterval(checkExist), 5000);
+            },
 
-                    this.$watch('darkMode', val => {
-                        localStorage.setItem('darkMode', val);
-                        if(val) document.documentElement.classList.add('dark');
-                        else document.documentElement.classList.remove('dark');
-                    });
-                    if(this.darkMode) document.documentElement.classList.add('dark');
-                    this.$watch('bookmarks', val => {
-                        localStorage.setItem('holy_bookmarks', JSON.stringify(val));
-                        this.quickStats[0].value = val.length;
-                    });
-                    this.$watch('volume', val => this.audio.volume = val);
-                    this.audio.ontimeupdate = () => {
-                        this.currentTime = this.audio.currentTime;
-                        this.duration = this.audio.duration;
-                        this.audioProgress = (this.currentTime / this.duration) * 100;
-                    };
-                    this.audio.onended = () => this.isPlaying = false;
-                },
-                get filteredSurahs() {
-                    return this.surahs.filter(s => s.name.includes(this.searchQuery) || s.englishName.toLowerCase().includes(this.searchQuery.toLowerCase()));
-                },
-                async loadSurah(num) {
-                    this.selectedSurah = num;
-                    const res = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,en.asad`);
-                    const data = await res.json();
-                    const ar = data.data[0];
-                    const en = data.data[1];
+            async loadSurah(num) {
+                this.selectedSurah = num;
+                this.currentAyahIndex = 0;
+                this.stopAudio();
+                this.resetFullSurahTest();
+                this.practiceMode = false;
+                this.revealedAyahs = [];
+                try {
+                    const textRes = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,ar.muyassar,en.asad`);
+                    const textData = await textRes.json();
+                    const audioRes = await fetch(`https://api.alquran.cloud/v1/surah/${num}/${this.selectedReciter}`);
+                    const audioData = await audioRes.json();
+                    
+                    const arabicAyahs = textData.data[0].ayahs;
+                    const tafsirAyahs = textData.data[1].ayahs;
+                    const translationAyahs = textData.data[2].ayahs;
+                    const audioAyahs = audioData.data?.ayahs || [];
+                    
                     this.surahData = {
-                        ...ar,
-                        ayahs: ar.ayahs.map((a, i) => ({
-                            ...a,
-                            translation: en.ayahs[i].text
+                        number: textData.data[0].number,
+                        name: textData.data[0].name,
+                        revelationType: textData.data[0].revelationType,
+                        ayahs: arabicAyahs.map((a, i) => ({
+                            number: a.number,
+                            numberInSurah: a.numberInSurah,
+                            text: a.text,
+                            tafsir: tafsirAyahs[i]?.text || "لا يوجد تفسير",
+                            translation: translationAyahs[i]?.text || "",
+                            audio: audioAyahs[i]?.audio || null
                         }))
                     };
-                    this.audio.src = `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${num}.mp3`;
-                    this.isPlaying = false;
-                    this.audioProgress = 0;
-                    this.currentTime = 0;
-                },
-                toggleAudio() {
-                    if (this.audio.src && this.audio.src !== window.location.href) {
-                        if (this.isPlaying) this.audio.pause();
-                        else this.audio.play();
-                        this.isPlaying = !this.isPlaying;
-                    }
-                },
-                formatTime(seconds) {
-                    if (isNaN(seconds) || !isFinite(seconds)) return "00:00";
-                    const min = Math.floor(seconds / 60);
-                    const sec = Math.floor(seconds % 60);
-                    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-                },
-                copyAyah(text) {
-                    navigator.clipboard.writeText(text);
-                },
-                toggleBookmark(ayah) {
-                    const idx = this.bookmarks.findIndex(b => b.number === ayah.number && b.surahNumber === this.selectedSurah);
-                    if (idx > -1) this.bookmarks.splice(idx, 1);
-                    else this.bookmarks.push({ number: ayah.number, surahNumber: this.selectedSurah, surahName: this.surahData.name, text: ayah.text });
-                },
-                isBookmarked(ayah) {
-                    return this.bookmarks.some(b => b.number === ayah.number && b.surahNumber === this.selectedSurah);
-                },
-                getViewTitle() {
-                    if (this.currentView === 'quran' && this.selectedSurah) return this.surahData?.name;
-                    return this.menu.find(m => m.id === this.currentView)?.name || '';
+                    if (this.surahData.ayahs[0]?.audio) this.audio.src = this.surahData.ayahs[0].audio;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } catch (e) { 
+                    console.error("Error loading surah details", e);
+                    alert("حدث خطأ في تحميل السورة، يرجى المحاولة مرة أخرى.");
                 }
+            },
+
+            // Single ayah practice mode (unchanged, but uses normalizeArabic from above)
+            togglePracticeMode() {
+                if (this.practiceModeChoice !== 'single') return;
+                this.practiceMode = !this.practiceMode;
+                if (!this.practiceMode) {
+                    this.revealedAyahs = [];
+                } else {
+                    if (!this.revealedAyahs.length && this.surahData) {
+                        this.revealedAyahs = new Array(this.surahData.ayahs.length).fill(false);
+                    }
+                }
+            },
+
+            startSingleAyahRecitation(ayahIndex, originalText) {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    alert("متصفحك لا يدعم خاصية التعرف على الصوت.");
+                    return;
+                }
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'ar-SA';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                this.recitingAyah = ayahIndex;
+                recognition.start();
+
+                recognition.onresult = (event) => {
+                    const spoken = event.results[0][0].transcript;
+                    const similarity = this.calculateSimilarity(spoken, originalText);
+                    if (similarity >= 0.65) {
+                        this.revealedAyahs[ayahIndex] = true;
+                        alert(`✅ أحسنت! الآية صحيحة (التشابه: ${Math.round(similarity*100)}%).`);
+                    } else {
+                        alert(`❌ المحاولة غير صحيحة. حاول مرة أخرى.\n\nما سمعناه: "${spoken}"\nالتشابه: ${Math.round(similarity*100)}%`);
+                    }
+                    this.recitingAyah = null;
+                };
+                recognition.onerror = () => { this.recitingAyah = null; };
+                recognition.onend = () => { if (this.recitingAyah !== null) this.recitingAyah = null; };
+            },
+
+            // Full surah test mode (unchanged)
+            startFullSurahTest() {
+                if (this.practiceModeChoice !== 'full') return;
+                if (!this.surahData) return;
+                this.resetFullSurahTest();
+                this.fullSurahTestActive = true;
+                this.surahTestCompleted = false;
+                this.testPassedAyahs = new Array(this.surahData.ayahs.length).fill(false);
+                this.currentTestAyahIndex = 0;
+                this.waitingForRecording = false;
+                this.recitingAyah = null;
+                this.playCurrentTestAyah();
+            },
+
+            playCurrentTestAyah() {
+                if (!this.fullSurahTestActive || this.surahTestCompleted) return;
+                const idx = this.currentTestAyahIndex;
+                const ayah = this.surahData.ayahs[idx];
+                if (ayah && ayah.audio) {
+                    this.audio.src = ayah.audio;
+                    this.audio.play().then(() => {
+                        this.isPlaying = true;
+                        this.currentAyahIndex = idx;
+                        this.waitingForRecording = false;
+                        this.scrollToAyah(idx);
+                    }).catch(e => console.warn);
+                } else {
+                    this.handleAyahTestSuccess();
+                }
+            },
+
+            startListeningForCurrentAyah() {
+                if (!this.fullSurahTestActive || this.surahTestCompleted) return;
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    alert("متصفحك لا يدعم خاصية التعرف على الصوت.");
+                    this.resetFullSurahTest();
+                    return;
+                }
+                const idx = this.currentTestAyahIndex;
+                const ayah = this.surahData.ayahs[idx];
+                if (!ayah) return;
+                
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'ar-SA';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                this.recitingAyah = idx;
+                recognition.start();
+
+                recognition.onresult = (event) => {
+                    const spoken = event.results[0][0].transcript;
+                    const similarity = this.calculateSimilarity(spoken, ayah.text);
+                    if (similarity >= 0.65) {
+                        this.testPassedAyahs[idx] = true;
+                        if (idx + 1 < this.surahData.ayahs.length) {
+                            this.currentTestAyahIndex = idx + 1;
+                            this.waitingForRecording = false;
+                            this.recitingAyah = null;
+                            this.playCurrentTestAyah();
+                        } else {
+                            this.surahTestCompleted = true;
+                            this.fullSurahTestActive = false;
+                            this.waitingForRecording = false;
+                            this.recitingAyah = null;
+                            alert("🎉 مبارك! لقد أتممت تلاوة السورة كاملة بنجاح 🎉");
+                        }
+                    } else {
+                        alert(`❌ خطأ في الآية رقم ${idx+1}. حاول مرة أخرى.\n\nما سمعناه: "${spoken}"\nالتشابه: ${Math.round(similarity*100)}%`);
+                        this.recitingAyah = null;
+                        this.waitingForRecording = false;
+                        this.playCurrentTestAyah();
+                    }
+                };
+                recognition.onerror = () => {
+                    this.recitingAyah = null;
+                    this.waitingForRecording = false;
+                    setTimeout(() => {
+                        if (this.fullSurahTestActive && !this.surahTestCompleted) this.playCurrentTestAyah();
+                    }, 1000);
+                };
+                recognition.onend = () => {
+                    if (this.recitingAyah !== null) this.recitingAyah = null;
+                };
+            },
+
+            handleAyahTestSuccess() {
+                if (!this.fullSurahTestActive) return;
+                this.testPassedAyahs[this.currentTestAyahIndex] = true;
+                if (this.currentTestAyahIndex + 1 < this.surahData.ayahs.length) {
+                    this.currentTestAyahIndex++;
+                    this.waitingForRecording = false;
+                    this.playCurrentTestAyah();
+                } else {
+                    this.surahTestCompleted = true;
+                    this.fullSurahTestActive = false;
+                    alert("🎉 مبارك! لقد أتممت تلاوة السورة كاملة بنجاح 🎉");
+                }
+            },
+
+            resetFullSurahTest() {
+                this.fullSurahTestActive = false;
+                this.surahTestCompleted = false;
+                this.testPassedAyahs = [];
+                this.currentTestAyahIndex = 0;
+                this.recitingAyah = null;
+                this.waitingForRecording = false;
+                if (this.audio && this.audio.src && this.audio.paused === false) {
+                    this.audio.pause();
+                    this.isPlaying = false;
+                }
+            },
+
+            // Helper for similarity (uses same normalizeArabic)
+            similarityRatio(s1, s2) {
+                const norm1 = this.normalizeArabic(s1);
+                const norm2 = this.normalizeArabic(s2);
+                const longer = norm1.length > norm2.length ? norm1 : norm2;
+                const shorter = norm1.length > norm2.length ? norm2 : norm1;
+                if (longer.length === 0) return 1.0;
+                const costs = new Array(shorter.length + 1);
+                for (let i = 0; i <= shorter.length; i++) costs[i] = i;
+                for (let i = 1; i <= longer.length; i++) {
+                    let prev = i;
+                    for (let j = 1; j <= shorter.length; j++) {
+                        const cost = longer[i-1] === shorter[j-1] ? 0 : 1;
+                        const current = Math.min(prev + 1, costs[j] + 1, costs[j-1] + cost);
+                        costs[j-1] = prev;
+                        prev = current;
+                    }
+                    costs[shorter.length] = prev;
+                }
+                const distance = costs[shorter.length];
+                const maxLen = Math.max(longer.length, shorter.length);
+                return (maxLen - distance) / maxLen;
+            },
+            calculateSimilarity(spoken, original) {
+                return this.similarityRatio(spoken, original);
+            },
+
+            // General audio functions
+            playSpecificAyah(index) {
+                if (this.fullSurahTestActive) return;
+                if (!this.surahData || !this.surahData.ayahs[index]?.audio) return;
+                this.stopAudio();
+                this.currentAyahIndex = index;
+                this.audio.src = this.surahData.ayahs[index].audio;
+                this.audio.play().then(() => {
+                    this.isPlaying = true;
+                    this.scrollToCurrentAyah();
+                }).catch(e => console.warn);
+            },
+
+            toggleGlobalAudio() {
+                if (this.fullSurahTestActive) return;
+                if (!this.surahData) return;
+                if (this.isPlaying) {
+                    this.audio.pause();
+                    this.isPlaying = false;
+                } else {
+                    if (!this.audio.src || this.audio.ended) {
+                        if (this.surahData.ayahs[this.currentAyahIndex]?.audio) {
+                            this.audio.src = this.surahData.ayahs[this.currentAyahIndex].audio;
+                        }
+                    }
+                    this.audio.play().then(() => {
+                        this.isPlaying = true;
+                        this.scrollToCurrentAyah();
+                    }).catch(e => console.warn);
+                }
+            },
+
+            playNextAyah() {
+                if (this.fullSurahTestActive) return;
+                if (!this.surahData) return;
+                const next = this.currentAyahIndex + 1;
+                if (next < this.surahData.ayahs.length && this.surahData.ayahs[next]?.audio) {
+                    this.currentAyahIndex = next;
+                    this.audio.src = this.surahData.ayahs[next].audio;
+                    this.audio.play().then(() => {
+                        this.isPlaying = true;
+                        this.scrollToCurrentAyah();
+                    }).catch(e => console.warn);
+                } else {
+                    this.isPlaying = false;
+                    this.currentAyahIndex = 0;
+                }
+            },
+
+            scrollToCurrentAyah() {
+                setTimeout(() => {
+                    const el = document.getElementById(`ayah-${this.surahData?.ayahs[this.currentAyahIndex]?.numberInSurah}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            },
+            scrollToAyah(idx) {
+                setTimeout(() => {
+                    const el = document.getElementById(`ayah-${this.surahData?.ayahs[idx]?.numberInSurah}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            },
+
+            stopAudio() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.audio.currentTime = 0;
+            },
+
+            changeReciter() {
+                localStorage.setItem('holy_reciter', this.selectedReciter);
+                if (this.selectedSurah) this.loadSurah(this.selectedSurah);
+            },
+
+            getReciterFirstName() {
+                const reciter = this.reciters.find(r => r.id === this.selectedReciter);
+                return reciter ? reciter.name.split(' ').slice(0, 2).join(' ') : '';
+            },
+
+            get audioProgress() { return this.duration ? (this.currentTime / this.duration) * 100 : 0; },
+            seekAudio(event) {
+                if (this.fullSurahTestActive) return;
+                const rect = event.currentTarget.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const percent = x / rect.width;
+                if (this.audio.src) this.audio.currentTime = percent * this.duration;
+            },
+            formatTime(seconds) { if (isNaN(seconds)) return "0:00"; const mins = Math.floor(seconds / 60); const secs = Math.floor(seconds % 60); return `${mins}:${secs < 10 ? '0' : ''}${secs}`; },
+            copyAyah(text) { navigator.clipboard.writeText(text); alert("تم نسخ الآية"); },
+            toggleBookmark(ayah) {
+                const exists = this.bookmarks.some(b => b.number === ayah.number);
+                if (exists) this.bookmarks = this.bookmarks.filter(b => b.number !== ayah.number);
+                else this.bookmarks.push({ ...ayah, surahName: this.surahData?.name });
+            },
+            isBookmarked(ayah) { return this.bookmarks.some(b => b.number === ayah.number); },
+            getViewTitle() {
+                if (this.selectedSurah && this.surahData) return ' ' + this.surahData.name;
+                const view = this.menu.find(m => m.id === this.currentView);
+                return view ? view.name : 'نور اليقين';
             }
         }
+    }

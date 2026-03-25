@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نور اليقين | تلاوة و أذكار</title>
-    <link rel="stylesheet" href="style.css">
+    <title>نور اليقين | تلاوة، أذكار  </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
-    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.png">
 </head>
 <body class="text-slate-900 dark:text-slate-100 min-h-screen overflow-hidden">
     <div class="mesh-bg"></div>
@@ -25,10 +25,9 @@
                     <span class="hidden md:block font-black text-2xl tracking-tight bg-gradient-to-l from-primary to-teal-600 bg-clip-text text-transparent">نور اليقين</span>
                 </div>
             </div>
-
             <nav class="flex-1 px-3 md:px-4 space-y-2">
                 <template x-for="item in menu">
-                    <button @click="currentView = item.id; selectedSurah = null" 
+                    <button @click="currentView = item.id; selectedSurah = null; resetFullSurahTest(); selectedProphet = null" 
                             :class="currentView === item.id ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'"
                             class="w-full flex items-center justify-center md:justify-start gap-4 p-3 md:p-4 rounded-5 transition-all group">
                         <i :class="item.icon" class="text-lg md:text-xl group-hover:scale-110 transition-transform"></i>
@@ -36,7 +35,6 @@
                     </button>
                 </template>
             </nav>
-
             <div class="px-3 md:px-6 mt-auto">
                 <button @click="darkMode = !darkMode" class="w-full h-12 md:h-14 glass rounded-5 flex items-center justify-center gap-3 border-none shadow-none hover:bg-primary/5 transition">
                     <i :class="darkMode ? 'fa-solid fa-sun text-yellow-500' : 'fa-solid fa-moon text-blue-500'"></i>
@@ -49,20 +47,19 @@
             
             <header class="glass rounded-5 p-3 sm:p-4 px-4 sm:px-8 flex justify-between items-center min-h-[4rem] sm:h-20 shrink-0">
                 <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                    <div x-show="currentView === 'quran'" class="relative w-full max-w-md">
+                    <div x-show="currentView === 'quran' && !selectedSurah" class="relative w-full max-w-md">
                         <i class="fa-solid fa-magnifying-glass absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 opacity-30 text-sm sm:text-base"></i>
-                        <input type="text" x-model="searchQuery" placeholder="ابحث عن سورة..." 
+                        <input type="text" x-model="searchQuery" @input="performVerseSearch" placeholder="ابحث في الآيات (كلمة أو أكثر، دون تشكيل)..." 
                                class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-5 py-2 pr-10 sm:pr-12 pl-2 focus:ring-2 ring-primary/50 outline-none text-xs sm:text-sm transition-all">
                     </div>
-                    <h2 x-show="currentView !== 'quran'" class="text-lg sm:text-xl font-black truncate" x-text="getViewTitle()"></h2>
+                    <h2 x-show="currentView !== 'quran' || selectedSurah" class="text-lg sm:text-xl font-black truncate" x-text="getViewTitle()"></h2>
                 </div>
-                
                 <div class="flex items-center gap-3 sm:gap-6 shrink-0 pl-2">
                     <div class="text-left hidden lg:block">
                         <p class="text-[10px] font-bold opacity-50 uppercase">تاريخ اليوم</p>
                         <p class="text-sm font-bold truncate" x-text="new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })"></p>
                     </div>
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-5 bg-accent/10 flex items-center justify-center text-accent shrink-0">
+                    <div style="margin-right: 7px" class="w-8 h-8 sm:w-10 sm:h-10 rounded-5 bg-accent/10 flex items-center justify-center text-accent shrink-0">
                         <i class="fa-solid fa-bell text-sm sm:text-base"></i>
                     </div>
                 </div>
@@ -70,6 +67,7 @@
 
             <div class="flex-1 glass rounded-5 overflow-y-auto p-3 sm:p-4 md:p-8 relative">
                 
+                <!-- Home view -->
                 <div x-show="currentView === 'home'" x-transition class="space-y-4 sm:space-y-8">
                     <div class="relative h-40 sm:h-64 rounded-5 overflow-hidden group">
                         <img src="https://www.travelzoo.com/images/blog/2021/12/29/iStock-516214379-bluemosque-istanbul.jpg?width=412&spr=3" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="background">
@@ -78,23 +76,27 @@
                             <p class="opacity-90 font-amiri text-sm sm:text-2xl italic">"وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ"</p>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                        <template x-for="stat in quickStats">
+                        <template x-for="stat in quickStats" :key="stat.id">
                             <div class="glass p-4 sm:p-6 rounded-5 border-b-4 border-primary hover:-translate-y-1 sm:hover:-translate-y-2 transition duration-300 flex flex-col items-center sm:items-start text-center sm:text-right">
                                 <div :class="stat.bg" class="w-10 h-10 sm:w-12 sm:h-12 rounded-5 flex items-center justify-center mb-2 sm:mb-4">
                                     <i :class="stat.icon" class="text-white text-sm sm:text-base"></i>
                                 </div>
                                 <h4 class="font-bold opacity-60 text-xs sm:text-sm" x-text="stat.label"></h4>
-                                <p class="text-lg sm:text-2xl font-black truncate" x-text="stat.value"></p>
+                                <p class="text-lg sm:text-2xl font-black truncate" x-text="stat.id === 'reciter' ? getReciterFirstName() : stat.value"></p>
                             </div>
                         </template>
                     </div>
                 </div>
 
+                <!-- Quran view: surah list or search results -->
                 <div x-show="currentView === 'quran' && !selectedSurah" x-transition>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                        <template x-for="surah in filteredSurahs">
+                    <div x-show="loadingQuran" class="text-center py-10">
+                        <i class="fa-solid fa-spinner fa-spin text-primary text-2xl"></i>
+                        <p class="mt-2 text-sm">جاري تحميل القرآن الكريم للبحث...</p>
+                    </div>
+                    <div x-show="!loadingQuran && searchQuery === ''" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        <template x-for="surah in surahs" :key="surah.number">
                             <div @click="loadSurah(surah.number)" class="glass p-3 sm:p-5 rounded-5 hover:bg-primary transition-all cursor-pointer group flex justify-between items-center border border-transparent hover:border-white/20">
                                 <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                                     <div class="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-5 bg-primary/10 group-hover:bg-white/20 flex items-center justify-center text-primary group-hover:text-white font-black text-sm sm:text-base" x-text="surah.number"></div>
@@ -107,47 +109,94 @@
                             </div>
                         </template>
                     </div>
-                </div>
-
-                <div x-show="selectedSurah" x-transition class="max-w-4xl mx-auto pb-6 sm:pb-32">
-                    <button @click="selectedSurah = null" class="mb-6 sm:mb-8 flex items-center gap-2 sm:gap-3 font-bold text-primary hover:gap-4 sm:hover:gap-5 transition-all text-sm sm:text-base">
-                        <i class="fa-solid fa-arrow-right"></i> العودة للمصحف
-                    </button>
-                    
-                    <div class="text-center mb-8 sm:mb-12">
-                        <h2 class="text-3xl sm:text-5xl font-amiri font-bold mb-2 sm:mb-4 text-primary" x-text="surahData?.name"></h2>
-                        <div class="flex justify-center gap-2 opacity-60 text-xs sm:text-sm font-bold">
-                            <span x-text="surahData?.revelationType === 'Meccan' ? 'مكية' : 'مدنية'"></span>
-                            <span>•</span>
-                            <span x-text="surahData?.numberOfAyahs + ' آيات'"></span>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <template x-for="ayah in surahData?.ayahs">
-                            <div class="glass p-4 sm:p-8 rounded-5 relative group hover:shadow-xl transition-all">
-                                <div class="flex justify-between items-start mb-4 sm:mb-6">
-                                    <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-5 bg-primary/10 text-primary flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0" x-text="ayah.numberInSurah"></span>
-                                    <div class="flex gap-2 sm:gap-3 shrink-0">
-                                        <button @click="copyAyah(ayah.text)" class="text-slate-300 hover:text-primary transition p-1"><i class="fa-solid fa-copy text-sm sm:text-base"></i></button>
-                                        <button @click="toggleBookmark(ayah)" 
-                                                :class="isBookmarked(ayah) ? 'text-red-500' : 'text-slate-300 hover:text-red-400'"
-                                                class="transition-colors p-1">
-                                            <i class="fa-solid fa-heart text-sm sm:text-xl"></i>
-                                        </button>
-                                    </div>
+                    <div x-show="!loadingQuran && searchQuery !== ''" class="space-y-3">
+                        <p class="text-sm opacity-70 mb-3" x-text="`نتائج البحث عن: "${searchQuery}" (${verseSearchResults.length} آية)`"></p>
+                        <template x-if="verseSearchResults.length === 0">
+                            <div class="text-center py-10 opacity-60">لا توجد نتائج مطابقة</div>
+                        </template>
+                        <template x-for="res in verseSearchResults" :key="res.key">
+                            <div class="glass p-4 rounded-5 search-result cursor-pointer hover:bg-primary/10 transition" @click="openVerseInSurah(res.surahNumber, res.ayahNumber)">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-xs font-bold bg-primary/20 px-2 py-1 rounded-full" x-text="`سورة ${res.surahName} · آية ${res.ayahNumber}`"></span>
+                                    <i class="fa-solid fa-chevron-left text-primary text-sm"></i>
                                 </div>
-                                <p class="font-amiri text-right quran-text select-all" 
-                                   :style="'font-size: ' + (window.innerWidth < 885 ? fontSize * 0.7 : fontSize) + 'px'" x-text="ayah.text"></p>
-                                <div x-show="showTranslation" class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-200 dark:border-white/5 text-slate-500 font-light text-xs sm:text-sm" x-text="ayah.translation"></div>
+                                <p class="font-amiri text-right leading-loose" x-text="res.text"></p>
                             </div>
                         </template>
                     </div>
                 </div>
 
+                <!-- Surah reading view (full) -->
+                <div x-show="selectedSurah" x-transition class="max-w-4xl mx-auto pb-6 sm:pb-32">
+                    <div class="flex justify-between items-center mb-6 sm:mb-8 flex-wrap gap-3">
+                        <button @click="selectedSurah = null; stopAudio(); resetFullSurahTest()" class="flex items-center gap-2 sm:gap-3 font-bold text-primary hover:gap-4 sm:hover:gap-5 transition-all text-sm sm:text-base">
+                            <i class="fa-solid fa-arrow-right"></i> العودة للمصحف
+                        </button>
+                        <div class="flex gap-2">
+                            <button x-show="practiceModeChoice === 'single'" @click="togglePracticeMode()" :class="practiceMode ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-700'" class="px-4 py-2 rounded-5 text-sm font-bold flex items-center gap-2 transition">
+                                <i class="fa-solid fa-microphone-alt"></i> <span x-text="practiceMode ? 'إيقاف التسميع' : 'وضع التسميع (آية)'"></span>
+                            </button>
+                            <button x-show="practiceModeChoice === 'full'" @click="startFullSurahTest()" class="px-4 py-2 rounded-5 text-sm font-bold flex items-center gap-2 transition bg-primary text-white">
+                                <i class="fa-solid fa-play"></i> <span>بدء تسميع السورة</span>
+                            </button>
+                            <button x-show="fullSurahTestActive" @click="resetFullSurahTest()" class="px-4 py-2 rounded-5 text-sm font-bold flex items-center gap-2 transition bg-red-500/20 text-red-600">
+                                <i class="fa-solid fa-stop"></i> <span>إعادة تعيين الاختبار</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-center mb-8 sm:mb-12">
+                        <h2 class="text-3xl sm:text-5xl font-amiri font-bold mb-2 sm:mb-4 text-primary" x-text="surahData?.name"></h2>
+                        <div class="flex justify-center gap-2 opacity-60 text-xs sm:text-sm font-bold">
+                            <span x-text="surahData?.revelationType === 'Meccan' ? 'مكية' : 'مدنية'"></span>
+                            <span>•</span>
+                            <span x-text="surahData?.ayahs.length + ' آيات'"></span>
+                        </div>
+                    </div>
+                    <div x-show="fullSurahTestActive" class="mb-6 p-4 glass rounded-5 text-center">
+                        <p class="font-bold text-primary mb-2">وضع تسميع السورة كاملة (تلقائي)</p>
+                        <p class="text-sm">الآية الحالية: <span class="font-bold text-lg" x-text="currentTestAyahIndex + 1"></span> / <span x-text="surahData?.ayahs.length"></span></p>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mt-2 overflow-hidden">
+                            <div class="bg-primary h-full transition-all" :style="'width: ' + ((currentTestAyahIndex) / surahData?.ayahs.length * 100) + '%'"></div>
+                        </div>
+                        <p x-show="surahTestCompleted" class="text-green-600 mt-2">🎉 مبارك! أتممت تلاوة السورة كاملة بنجاح 🎉</p>
+                        <p x-show="fullSurahTestActive && !surahTestCompleted" class="text-sm mt-2">
+                            <span x-show="isPlaying && !waitingForRecording">🔊 الآن يتم تلاوة الآية...</span>
+                            <span x-show="waitingForRecording && !isPlaying">🎤 استمع الآن وتحدث بالآية...</span>
+                        </p>
+                    </div>
+                    <div class="space-y-4">
+                        <template x-for="(ayah, idx) in surahData?.ayahs" :key="ayah.number">
+                            <div :id="'ayah-' + ayah.numberInSurah" :class="{'ayah-playing': currentAyahIndex === idx && isPlaying, 'current-test-ayah': fullSurahTestActive && currentTestAyahIndex === idx && !surahTestCompleted}" class="glass p-4 sm:p-8 rounded-5 relative group hover:shadow-xl transition-all">
+                                <div class="flex justify-between items-start mb-4 sm:mb-6">
+                                    <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-5 bg-primary/10 text-primary flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0" x-text="ayah.numberInSurah"></span>
+                                    <div class="flex gap-2 sm:gap-3 shrink-0">
+                                        <button @click="playSpecificAyah(idx)" class="text-primary hover:scale-110 transition p-1" title="استماع الآية"><i class="fa-solid fa-play text-sm sm:text-base"></i></button>
+                                        <button @click="copyAyah(ayah.text)" class="text-slate-300 hover:text-primary transition p-1" title="نسخ الآية"><i class="fa-solid fa-copy text-sm sm:text-base"></i></button>
+                                        <button @click="toggleBookmark(ayah)" :class="isBookmarked(ayah) ? 'text-red-500' : 'text-slate-300 hover:text-red-400'" class="transition-colors p-1"><i class="fa-solid fa-heart text-sm sm:text-xl"></i></button>
+                                    </div>
+                                </div>
+                                <div x-show="(!practiceMode && !fullSurahTestActive) || (practiceMode && revealedAyahs[idx]) || (fullSurahTestActive && testPassedAyahs[idx])">
+                                    <p class="font-amiri text-right quran-text select-all" :style="'font-size: ' + (window.innerWidth < 885 ? fontSize * 0.7 : fontSize) + 'px'" x-text="ayah.text"></p>
+                                    <div x-show="showTranslation" class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-200 dark:border-white/5 text-slate-500 font-light text-xs sm:text-sm text-left" dir="ltr" x-text="ayah.translation"></div>
+                                    <div x-show="showTafsir" class="mt-4 pt-4 border-t border-slate-200 dark:border-white/5 text-primary/80 font-bold text-xs sm:text-sm leading-relaxed text-right" x-text="'التفسير الميسر: ' + ayah.tafsir"></div>
+                                </div>
+                                <div x-show="practiceMode && !revealedAyahs[idx] && practiceModeChoice === 'single'" class="practice-placeholder text-center py-6">
+                                    <i class="fa-solid fa-eye-slash text-2xl mb-2 opacity-50"></i>
+                                    <p class="text-sm opacity-70 mb-3">الآية مخفية – حاول تلاوتها</p>
+                                    <button @click="startSingleAyahRecitation(idx, ayah.text)" :disabled="recitingAyah === idx" class="bg-primary/20 hover:bg-primary/40 text-primary rounded-full px-5 py-2 text-sm font-bold transition flex items-center gap-2 mx-auto">
+                                        <i :class="recitingAyah === idx ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-microphone'"></i>
+                                        <span x-text="recitingAyah === idx ? 'جاري الاستماع...' : 'ابدأ التلاوة'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Athkar view -->
                 <div x-show="currentView === 'athkar'" x-transition class="max-w-4xl mx-auto">
                     <div x-show="!selectedAthkarCategory" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                        <template x-for="(list, key) in allAthkarData">
+                        <template x-for="(list, key) in allAthkarData" :key="key">
                             <div @click="selectedAthkarCategory = key" class="glass p-6 sm:p-10 rounded-5 cursor-pointer hover:bg-primary/5 border-2 border-transparent hover:border-primary/20 transition group flex flex-col items-center text-center">
                                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-5 bg-primary/10 flex items-center justify-center text-primary mb-4 sm:mb-6 group-hover:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-hands-praying text-xl sm:text-2xl"></i>
@@ -157,23 +206,18 @@
                             </div>
                         </template>
                     </div>
-
                     <div x-show="selectedAthkarCategory" class="space-y-4 sm:space-y-6">
                         <button @click="selectedAthkarCategory = null" class="font-bold text-primary mb-2 sm:mb-4 text-sm sm:text-base"><i class="fa-solid fa-arrow-right ml-2"></i> العودة</button>
-                        <template x-for="(thekr, index) in allAthkarData[selectedAthkarCategory]">
+                        <template x-for="(thekr, index) in allAthkarData[selectedAthkarCategory]" :key="index">
                             <div class="glass p-5 sm:p-8 rounded-5 text-center flex flex-col items-center">
                                 <p class="text-lg sm:text-2xl font-amiri leading-relaxed mb-6 sm:mb-8 w-full" x-text="thekr.text"></p>
                                 <div class="flex flex-col items-center gap-3 sm:gap-4">
                                     <div class="relative w-20 h-20 sm:w-24 sm:h-24">
                                         <svg class="w-full h-full -rotate-90">
                                             <circle cx="50%" cy="50%" r="35%" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-200 dark:text-slate-800" />
-                                            <circle cx="50%" cy="50%" r="35%" stroke="currentColor" stroke-width="8" fill="transparent" 
-                                                    class="text-primary transition-all duration-500"
-                                                    :stroke-dasharray="2 * Math.PI * (window.innerWidth < 885 ? 28 : 34)"
-                                                    :stroke-dashoffset="2 * Math.PI * (window.innerWidth < 885 ? 28 : 34) * (1 - (thekr.currentCount / thekr.originalCount))" />
+                                            <circle cx="50%" cy="50%" r="35%" stroke="currentColor" stroke-width="8" fill="transparent" class="text-primary transition-all duration-500" :stroke-dasharray="2 * Math.PI * (window.innerWidth < 885 ? 28 : 34)" :stroke-dashoffset="2 * Math.PI * (window.innerWidth < 885 ? 28 : 34) * (1 - (thekr.currentCount / thekr.originalCount))" />
                                         </svg>
-                                        <button @click="if(thekr.currentCount > 0) thekr.currentCount--" 
-                                                class="absolute inset-0 flex items-center justify-center text-xl sm:text-2xl font-black hover:scale-110 transition active:scale-95">
+                                        <button @click="if(thekr.currentCount > 0) { thekr.currentCount--; if(thekr.currentCount === 0) { setTimeout(()=> thekr.currentCount = thekr.originalCount, 2000) } }" class="absolute inset-0 flex items-center justify-center text-xl sm:text-2xl font-black hover:scale-110 transition active:scale-95">
                                             <span x-text="thekr.currentCount"></span>
                                         </button>
                                     </div>
@@ -184,6 +228,7 @@
                     </div>
                 </div>
 
+                <!-- Favorites view -->
                 <div x-show="currentView === 'favorites'" x-transition class="max-w-4xl mx-auto space-y-4 sm:space-y-6">
                     <template x-if="bookmarks.length === 0">
                         <div class="text-center opacity-50 py-12 sm:py-20">
@@ -195,14 +240,43 @@
                         <div class="glass p-4 sm:p-8 rounded-5 relative">
                             <div class="flex justify-between items-start mb-4 sm:mb-6">
                                 <span class="text-[10px] sm:text-xs opacity-50 font-bold" x-text="fav.surahName"></span>
-                                <button @click="bookmarks = bookmarks.filter((_, i) => i !== index)"
-                                        class="text-red-500 hover:scale-110 transition p-1">
-                                    <i class="fa-solid fa-trash text-sm sm:text-base"></i>
-                                </button>
+                                <button @click="bookmarks = bookmarks.filter((_, i) => i !== index)" class="text-red-500 hover:scale-110 transition p-1"><i class="fa-solid fa-trash text-sm sm:text-base"></i></button>
                             </div>
                             <p class="font-amiri text-lg sm:text-2xl leading-loose" x-text="fav.text"></p>
                         </div>
                     </template>
+                </div>
+
+                <!-- Prophets stories view with FULL stories -->
+                <div x-show="currentView === 'prophets'" x-transition class="max-w-4xl mx-auto">
+                    <div x-show="!selectedProphet" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <template x-for="prophet in prophetsList" :key="prophet.name">
+                            <div @click="selectedProphet = prophet" class="glass p-4 rounded-5 cursor-pointer hover:bg-primary/10 transition text-center group">
+                                <div class="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-user-graduate text-2xl text-primary"></i>
+                                </div>
+                                <h3 class="font-bold text-lg" x-text="prophet.name"></h3>
+                                <p class="text-xs opacity-50" x-text="`نبي من أنبياء الله`"></p>
+                            </div>
+                        </template>
+                    </div>
+                    <div x-show="selectedProphet" class="glass p-6 rounded-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <button @click="selectedProphet = null" class="text-primary font-bold"><i class="fa-solid fa-arrow-right ml-2"></i> العودة للقائمة</button>
+                            <h3 class="text-2xl font-black" x-text="selectedProphet.name"></h3>
+                        </div>
+                        <div class="space-y-4">
+                            <p class="leading-relaxed whitespace-pre-line" x-text="selectedProphet.story"></p>
+                            <div x-show="selectedProphet.quranRefs" class="mt-4 pt-4 border-t border-primary/20">
+                                <p class="font-bold text-primary mb-2">المراجع القرآنية:</p>
+                                <div class="space-y-1 text-sm">
+                                    <template x-for="ref in selectedProphet.quranRefs">
+                                        <p x-text="ref"></p>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -212,32 +286,30 @@
                         <i class="fa-solid fa-microphone-lines text-base"></i>
                     </div>
                     <div class="overflow-hidden w-full text-right">
-                        <p class="text-[9px] font-black opacity-40 uppercase mb-0.5">يتلو الآن</p>
+                        <p class="text-[9px] font-black opacity-40 uppercase mb-0.5" x-text="'يتلو الآن: ' + getReciterFirstName()"></p>
                         <p class="font-bold text-primary text-xs sm:text-sm truncate" x-text="surahData?.name || 'اختر سورة للبدء'"></p>
                     </div>
                 </div>
-
                 <div class="flex-1 flex flex-col items-center gap-1.5 w-full">
-                    <div class="flex items-center">
-                        <button @click="toggleAudio()" class="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white rounded-5 flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-110 active:scale-95 transition">
-                            <i :class="isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play'" class="text-xs sm:text-sm"></i>
+                    <div class="flex items-center gap-4">
+                        <button @click="toggleGlobalAudio()" :disabled="!surahData" :class="!surahData ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 active:scale-95'" class="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white rounded-5 flex items-center justify-center shadow-lg shadow-primary/30 transition">
+                            <i :class="isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play ml-1'" class="text-xs sm:text-sm"></i>
                         </button>
                     </div>
                     <div class="w-full flex items-center gap-2">
                         <span class="text-[9px] font-bold opacity-40 w-8 text-left shrink-0" x-text="formatTime(currentTime)"></span>
-                        <div class="flex-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-5 relative overflow-hidden">
+                        <div class="flex-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-5 relative overflow-hidden cursor-pointer" @click="seekAudio($event)">
                             <div class="absolute inset-0 bg-primary transition-all duration-300" :style="'width: ' + audioProgress + '%'"></div>
                         </div>
                         <span class="text-[9px] font-bold opacity-40 w-8 shrink-0" x-text="formatTime(duration)"></span>
                     </div>
                 </div>
-
                 <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-1/4 pt-1.5 md:pt-0 border-t md:border-t-0 border-slate-200/20">
                     <button @click="showSettings = !showSettings" class="w-7 h-7 sm:w-8 sm:h-8 glass rounded-5 flex items-center justify-center text-slate-500 hover:text-primary transition shrink-0">
                         <i class="fa-solid fa-gear text-xs sm:text-sm"></i>
                     </button>
                     <div class="flex items-center gap-2">
-                        <input type="range" x-model="volume" min="0" max="1" step="0.1" class="accent-primary h-1 w-16 sm:w-20">
+                        <input type="range" x-model="volume" min="0" max="1" step="0.05" class="accent-primary h-1 w-16 sm:w-20 cursor-pointer">
                         <i class="fa-solid fa-volume-low opacity-40 text-xs"></i>
                     </div>
                 </div>
@@ -246,8 +318,8 @@
     </div>
 
     <nav class="sm:hidden fixed bottom-0 left-0 w-full glass z-50 rounded-t-2xl flex justify-around items-center p-2 pb-safe border-t border-slate-200 dark:border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-        <template x-for="item in menu">
-            <button @click="currentView = item.id; selectedSurah = null" 
+        <template x-for="item in menu" :key="item.id">
+            <button @click="currentView = item.id; selectedSurah = null; resetFullSurahTest(); selectedProphet = null" 
                     :class="currentView === item.id ? 'text-primary scale-110' : 'text-slate-400'"
                     class="flex flex-col items-center justify-center p-2 w-14 rounded-xl transition-all duration-300">
                 <i :class="item.icon" class="text-xl mb-1"></i>
@@ -265,21 +337,41 @@
             <div class="space-y-6">
                 <div>
                     <label class="text-xs font-black opacity-50 block mb-3">حجم خط الآيات (<span x-text="fontSize"></span>px)</label>
-                    <input type="range" x-model="fontSize" min="20" max="50" class="w-full accent-primary">
+                    <input type="range" x-model="fontSize" min="20" max="50" class="w-full accent-primary cursor-pointer">
                 </div>
-                <div class="flex justify-between items-center p-4 glass rounded-5 border-none">
-                    <span class="text-xs sm:text-sm font-bold">إظهار الترجمة</span>
-                    <button @click="showTranslation = !showTranslation" :class="showTranslation ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'" class="w-12 h-6 rounded-full relative transition-colors">
-                        <div :class="showTranslation ? 'translate-x-6' : 'translate-x-1'" class="absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform shadow-sm"></div>
-                    </button>
+                <div>
+                    <label class="text-xs font-black opacity-50 block mb-3">القارئ (للتلاوة الصوتية)</label>
+                    <select x-model="selectedReciter" @change="changeReciter()" class="w-full bg-white dark:bg-slate-800 rounded-5 p-3 text-sm outline-none border border-slate-200 dark:border-white/10 focus:ring-2 ring-primary">
+                        <template x-for="reciter in reciters" :key="reciter.id">
+                            <option :value="reciter.id" x-text="reciter.name"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-black opacity-50 block mb-3">وضع التسميع</label>
+                    <div class="flex gap-3">
+                        <button @click="practiceModeChoice = 'single'; resetFullSurahTest()" :class="practiceModeChoice === 'single' ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-700'" class="flex-1 py-2 rounded-5 text-sm font-bold transition">آية منفردة</button>
+                        <button @click="practiceModeChoice = 'full'; if(practiceMode) practiceMode=false; resetFullSurahTest()" :class="practiceModeChoice === 'full' ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-700'" class="flex-1 py-2 rounded-5 text-sm font-bold transition">السورة كاملة (تلقائي)</button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-4 glass rounded-5 border-none">
+                        <span class="text-xs sm:text-sm font-bold">إظهار الترجمة الإنجليزية</span>
+                        <button @click="showTranslation = !showTranslation" :class="showTranslation ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'" class="w-12 h-6 rounded-full relative transition-colors cursor-pointer">
+                            <div :class="showTranslation ? 'translate-x-6' : 'translate-x-1'" class="absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform shadow-sm"></div>
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center p-4 glass rounded-5 border-none">
+                        <span class="text-xs sm:text-sm font-bold">إظهار التفسير (الميسر)</span>
+                        <button @click="showTafsir = !showTafsir" :class="showTafsir ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'" class="w-12 h-6 rounded-full relative transition-colors cursor-pointer">
+                            <div :class="showTafsir ? 'translate-x-6' : 'translate-x-1'" class="absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform shadow-sm"></div>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-   <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
-</html>
-</body>
-
 </html>

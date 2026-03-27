@@ -67,7 +67,7 @@
 
             <div class="flex-1 glass rounded-5 overflow-y-auto p-3 sm:p-4 md:p-8 relative">
                 
-                <!-- Home view -->
+                <!-- Home -->
                 <div x-show="currentView === 'home'" x-transition class="space-y-4 sm:space-y-8">
                     <div class="relative h-40 sm:h-64 rounded-5 overflow-hidden group">
                         <img src="https://www.travelzoo.com/images/blog/2021/12/29/iStock-516214379-bluemosque-istanbul.jpg?width=412&spr=3" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="background">
@@ -126,7 +126,7 @@
                     </div>
                 </div>
 
-                <!-- Surah reading view (full) -->
+                <!-- Surah reading view -->
                 <div x-show="selectedSurah" x-transition class="max-w-4xl mx-auto pb-6 sm:pb-32">
                     <div class="flex justify-between items-center mb-6 sm:mb-8 flex-wrap gap-3">
                         <button @click="selectedSurah = null; stopAudio(); resetFullSurahTest()" class="flex items-center gap-2 sm:gap-3 font-bold text-primary hover:gap-4 sm:hover:gap-5 transition-all text-sm sm:text-base">
@@ -247,7 +247,7 @@
                     </template>
                 </div>
 
-                <!-- Prophets stories view with FULL stories -->
+                <!-- Prophets stories -->
                 <div x-show="currentView === 'prophets'" x-transition class="max-w-4xl mx-auto">
                     <div x-show="!selectedProphet" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <template x-for="prophet in prophetsList" :key="prophet.name">

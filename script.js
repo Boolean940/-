@@ -14,11 +14,9 @@
             showSettings: false,
             bookmarks: JSON.parse(localStorage.getItem('holy_bookmarks') || '[]'),
             surahs: [],
-            // Quran search
             loadingQuran: false,
-            allVerses: [],      // will store normalized text and original
+            allVerses: [],     
             verseSearchResults: [],
-            // Audio
             audio: new Audio(),
             isPlaying: false,
             currentAyahIndex: 0,
@@ -26,7 +24,6 @@
             selectedReciter: localStorage.getItem('holy_reciter') || 'ar.alafasy',
             currentTime: 0,
             duration: 0,
-            // Practice
             practiceMode: false,
             revealedAyahs: [],
             recitingAyah: null,
@@ -36,7 +33,6 @@
             currentTestAyahIndex: 0,
             surahTestCompleted: false,
             waitingForRecording: false,
-            // Prophets
             selectedProphet: null,
             prophetsList: [
                 { name: "آدم عليه السلام", story: "آدم هو أبو البشرية وأول الأنبياء، خلقه الله تعالى بيديه من طين، ونفخ فيه روحه، وأسكنه الجنة. ثم أمر الملائكة بالسجود له فسجدوا إلا إبليس أبى واستكبر. ثم خلق الله حواء من ضلعه لتكون زوجة وسكناً له. وأسكنهما الجنة وأباح لهما الأكل من جميع ثمارها إلا شجرة واحدة ونهاهما عن الاقتراب منها. فوسوس لهما الشيطان وأكلا من الشجرة فعصيا ربهما. تاب الله عليهما وقبل توبتهما، ثم أهبطهما إلى الأرض ليعمرها ويتكاثر فيها. وتعلم آدم من ربه كلمات التوبة، وتلقى منها الألوهية والعبادة. وعاش آدم على الأرض ألف سنة، ورزق بالعديد من الأبناء، وكان من أشهرهم هابيل وقابيل، وشيث الذي جعله وصياً من بعده. توفي آدم في يوم الجمعة، ودفن في غار بجبل أبي قبيس. وكان آدم نبياً مكلماً، وقد ورد ذكره في القرآن في مواضع كثيرة، وعلم الله الأسماء كلها، وفضله على كثير من خلقه.", quranRefs: ["سورة البقرة (30-39)", "سورة الأعراف (11-25)", "سورة طه (115-123)", "سورة ص (71-85)"] },
@@ -281,19 +277,12 @@
         { text: "تقديم الرجل اليمنى عند دخول المسجد واليسرى عند الخروج.", originalCount: 1, currentCount: 1 }
     ]
             },
-            // Function to normalize Arabic text by removing diacritics and normalizing letters
             normalizeArabic(text) {
-                // Remove all diacritics (tashkeel)
                 let normalized = text.replace(/[\u064B-\u065F\u0670]/g, '');
-                // Normalize alif variations
                 normalized = normalized.replace(/[أإآ]/g, 'ا');
-                // Normalize ya with dots
                 normalized = normalized.replace(/[يى]/g, 'ي');
-                // Normalize waw with hamza
                 normalized = normalized.replace(/ؤ/g, 'و');
-                // Normalize alif maqsura
                 normalized = normalized.replace(/ة/g, 'ه');
-                // Remove extra spaces
                 normalized = normalized.replace(/\s+/g, ' ').trim();
                 return normalized;
             },
@@ -390,7 +379,6 @@
                 }
             },
 
-            // Single ayah practice mode (unchanged, but uses normalizeArabic from above)
             togglePracticeMode() {
                 if (this.practiceModeChoice !== 'single') return;
                 this.practiceMode = !this.practiceMode;
@@ -432,7 +420,6 @@
                 recognition.onend = () => { if (this.recitingAyah !== null) this.recitingAyah = null; };
             },
 
-            // Full surah test mode (unchanged)
             startFullSurahTest() {
                 if (this.practiceModeChoice !== 'full') return;
                 if (!this.surahData) return;
@@ -463,61 +450,78 @@
                 }
             },
 
-            startListeningForCurrentAyah() {
-                if (!this.fullSurahTestActive || this.surahTestCompleted) return;
-                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                    alert("متصفحك لا يدعم خاصية التعرف على الصوت.");
-                    this.resetFullSurahTest();
-                    return;
-                }
-                const idx = this.currentTestAyahIndex;
-                const ayah = this.surahData.ayahs[idx];
-                if (!ayah) return;
-                
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'ar-SA';
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
+          startListeningForCurrentAyah() {
+    if (!this.fullSurahTestActive || this.surahTestCompleted) return;
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("متصفحك لا يدعم خاصية التعرف على الصوت.");
+        this.resetFullSurahTest();
+        return;
+    }
+    const idx = this.currentTestAyahIndex;
+    const ayah = this.surahData.ayahs[idx];
+    if (!ayah) return;
 
-                this.recitingAyah = idx;
-                recognition.start();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ar-SA';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-                recognition.onresult = (event) => {
-                    const spoken = event.results[0][0].transcript;
-                    const similarity = this.calculateSimilarity(spoken, ayah.text);
-                    if (similarity >= 0.65) {
-                        this.testPassedAyahs[idx] = true;
-                        if (idx + 1 < this.surahData.ayahs.length) {
-                            this.currentTestAyahIndex = idx + 1;
-                            this.waitingForRecording = false;
-                            this.recitingAyah = null;
-                            this.playCurrentTestAyah();
-                        } else {
-                            this.surahTestCompleted = true;
-                            this.fullSurahTestActive = false;
-                            this.waitingForRecording = false;
-                            this.recitingAyah = null;
-                            alert("🎉 مبارك! لقد أتممت تلاوة السورة كاملة بنجاح 🎉");
-                        }
-                    } else {
-                        alert(`❌ خطأ في الآية رقم ${idx+1}. حاول مرة أخرى.\n\nما سمعناه: "${spoken}"\nالتشابه: ${Math.round(similarity*100)}%`);
-                        this.recitingAyah = null;
-                        this.waitingForRecording = false;
-                        this.playCurrentTestAyah();
-                    }
-                };
-                recognition.onerror = () => {
-                    this.recitingAyah = null;
-                    this.waitingForRecording = false;
-                    setTimeout(() => {
-                        if (this.fullSurahTestActive && !this.surahTestCompleted) this.playCurrentTestAyah();
-                    }, 1000);
-                };
-                recognition.onend = () => {
-                    if (this.recitingAyah !== null) this.recitingAyah = null;
-                };
-            },
+    let resultReceived = false;  
+
+    this.recitingAyah = idx;
+    recognition.start();
+
+    recognition.onresult = (event) => {
+        resultReceived = true;
+        const spoken = event.results[0][0].transcript;
+        const similarity = this.calculateSimilarity(spoken, ayah.text);
+        if (similarity >= 0.65) {
+            this.testPassedAyahs[idx] = true;
+            if (idx + 1 < this.surahData.ayahs.length) {
+                this.currentTestAyahIndex = idx + 1;
+                this.waitingForRecording = false;
+                this.recitingAyah = null;
+                this.playCurrentTestAyah();
+            } else {
+                this.surahTestCompleted = true;
+                this.fullSurahTestActive = false;
+                this.waitingForRecording = false;
+                this.recitingAyah = null;
+                alert("🎉 مبارك! لقد أتممت تلاوة السورة كاملة بنجاح 🎉");
+            }
+        } else {
+            alert(`❌ خطأ في الآية رقم ${idx+1}. حاول مرة أخرى.\n\nما سمعناه: "${spoken}"\nالتشابه: ${Math.round(similarity*100)}%`);
+            this.recitingAyah = null;
+            this.waitingForRecording = false;
+            this.playCurrentTestAyah();
+        }
+    };
+
+    recognition.onerror = () => {
+        this.recitingAyah = null;
+        this.waitingForRecording = false;
+        setTimeout(() => {
+            if (this.fullSurahTestActive && !this.surahTestCompleted) {
+                alert("حدث خطأ في الميكروفون. سيتم إعادة تشغيل الآية.");
+                this.playCurrentTestAyah();
+            }
+        }, 1000);
+    };
+
+    recognition.onend = () => {
+        if (!resultReceived) {
+            if (this.recitingAyah !== null) this.recitingAyah = null;
+            this.waitingForRecording = false;
+            if (this.fullSurahTestActive && !this.surahTestCompleted) {
+                alert("لم يتم اكتشاف صوت. حاول تلاوة الآية مرة أخرى.");
+                this.playCurrentTestAyah();
+            }
+        } else {
+            if (this.recitingAyah !== null) this.recitingAyah = null;
+        }
+    };
+},
 
             handleAyahTestSuccess() {
                 if (!this.fullSurahTestActive) return;
@@ -546,7 +550,6 @@
                 }
             },
 
-            // Helper for similarity (uses same normalizeArabic)
             similarityRatio(s1, s2) {
                 const norm1 = this.normalizeArabic(s1);
                 const norm2 = this.normalizeArabic(s2);
@@ -573,7 +576,6 @@
                 return this.similarityRatio(spoken, original);
             },
 
-            // General audio functions
             playSpecificAyah(index) {
                 if (this.fullSurahTestActive) return;
                 if (!this.surahData || !this.surahData.ayahs[index]?.audio) return;

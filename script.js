@@ -34,16 +34,30 @@
             surahTestCompleted: false,
             waitingForRecording: false,
             selectedProphet: null,
-            // New: Qira'at list (seven canonical readings)
             selectedQiraa: localStorage.getItem('holy_qiraa') || 'quran-uthmani',  // default Hafs
             qiraatList: [
-                { id: 'quran-uthmani', name: 'حفص عن عاصم (الرسم العثماني)' },
-                { id: 'quran-warsh', name: 'ورش عن نافع' },
-                { id: 'quran-qalun', name: 'قالون عن نافع' },
-                { id: 'quran-duri', name: 'الدوري عن أبي عمرو' },
-                { id: 'quran-susi', name: 'السوسي عن أبي عمرو' },
-                { id: 'quran-ibnkathir', name: 'ابن كثير المكي' },
-                { id: 'quran-abuamr', name: 'أبو عمرو البصري' }
+                    { id: 'quran-uthmani', name: 'حفص عن عاصم (الرسم العثماني)' },
+    { id: 'quran-warsh', name: 'ورش عن نافع' },
+    { id: 'quran-qalun', name: 'قالون عن نافع' },
+    { id: 'quran-duri', name: 'الدوري عن أبي عمرو' },
+    { id: 'quran-susi', name: 'السوسي عن أبي عمرو' },
+    { id: 'quran-ibnkathir', name: 'ابن كثير المكي' },
+    { id: 'quran-abuamr', name: 'أبو عمرو البصري' },
+    { id: 'quran-shubah', name: 'شعبة عن عاصم' },
+    { id: 'quran-hisham', name: 'هشام عن ابن عامر' },
+    { id: 'quran-ibndhakwan', name: 'ابن ذكوان عن ابن عامر' },
+    { id: 'quran-khalaf', name: 'خلف عن حمزة' },
+    { id: 'quran-khallad', name: 'خلاد عن حمزة' },
+    { id: 'quran-abu-l-harith', name: 'أبو الحارث عن الكسائي' },
+    { id: 'quran-duri-ankisai', name: 'الدوري عن الكسائي' },
+    { id: 'quran-bazzi', name: 'البزي عن ابن كثير' },
+    { id: 'quran-qunbul', name: 'قنبل عن ابن كثير' },
+    { id: 'quran-ibnwardan', name: 'ابن وردان عن أبي جعفر' },
+    { id: 'quran-ibnjammaz', name: 'ابن جماز عن أبي جعفر' },
+    { id: 'quran-ruways', name: 'رويس عن يعقوب' },
+    { id: 'quran-rawh', name: 'روح عن يعقوب' },
+    { id: 'quran-ishaq', name: 'إسحاق عن خلف العاشر' },
+    { id: 'quran-idris', name: 'إدريس عن خلف العاشر' }
             ],
             prophetsList: [
                 { name: "آدم عليه السلام", story: "آدم هو أبو البشرية وأول الأنبياء، خلقه الله تعالى بيديه من طين، ونفخ فيه روحه، وأسكنه الجنة. ثم أمر الملائكة بالسجود له فسجدوا إلا إبليس أبى واستكبر. ثم خلق الله حواء من ضلعه لتكون زوجة وسكناً له. وأسكنهما الجنة وأباح لهما الأكل من جميع ثمارها إلا شجرة واحدة ونهاهما عن الاقتراب منها. فوسوس لهما الشيطان وأكلا من الشجرة فعصيا ربهما. تاب الله عليهما وقبل توبتهما، ثم أهبطهما إلى الأرض ليعمرها ويتكاثر فيها. وتعلم آدم من ربه كلمات التوبة، وتلقى منها الألوهية والعبادة. وعاش آدم على الأرض ألف سنة، ورزق بالعديد من الأبناء، وكان من أشهرهم هابيل وقابيل، وشيث الذي جعله وصياً من بعده. توفي آدم في يوم الجمعة، ودفن في غار بجبل أبي قبيس. وكان آدم نبياً مكلماً، وقد ورد ذكره في القرآن في مواضع كثيرة، وعلم الله الأسماء كلها، وفضله على كثير من خلقه.", quranRefs: ["سورة البقرة (30-39)", "سورة الأعراف (11-25)", "سورة طه (115-123)", "سورة ص (71-85)"] },

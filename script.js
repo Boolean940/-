@@ -1,4 +1,4 @@
-  window.tailwind.config = { darkMode: 'class', theme: { screens: { 'sm': '885px', 'md': '1024px', 'lg': '1280px', 'xl': '1536px' }, extend: { colors: { primary: '#10b981', accent: '#fbbf24', darkBg: '#020617' }, fontFamily: { cairo: ['Cairo', 'sans-serif'], amiri: ['Amiri', 'serif'] } } } };
+      window.tailwind.config = { darkMode: 'class', theme: { screens: { 'sm': '885px', 'md': '1024px', 'lg': '1280px', 'xl': '1536px' }, extend: { colors: { primary: '#10b981', accent: '#fbbf24', darkBg: '#020617' }, fontFamily: { cairo: ['Cairo', 'sans-serif'], amiri: ['Amiri', 'serif'] } } } };
 
     function holyApp() {
         return {
@@ -34,6 +34,17 @@
             surahTestCompleted: false,
             waitingForRecording: false,
             selectedProphet: null,
+            // New: Qira'at list (seven canonical readings)
+            selectedQiraa: localStorage.getItem('holy_qiraa') || 'quran-uthmani',  // default Hafs
+            qiraatList: [
+                { id: 'quran-uthmani', name: 'حفص عن عاصم (الرسم العثماني)' },
+                { id: 'quran-warsh', name: 'ورش عن نافع' },
+                { id: 'quran-qalun', name: 'قالون عن نافع' },
+                { id: 'quran-duri', name: 'الدوري عن أبي عمرو' },
+                { id: 'quran-susi', name: 'السوسي عن أبي عمرو' },
+                { id: 'quran-ibnkathir', name: 'ابن كثير المكي' },
+                { id: 'quran-abuamr', name: 'أبو عمرو البصري' }
+            ],
             prophetsList: [
                 { name: "آدم عليه السلام", story: "آدم هو أبو البشرية وأول الأنبياء، خلقه الله تعالى بيديه من طين، ونفخ فيه روحه، وأسكنه الجنة. ثم أمر الملائكة بالسجود له فسجدوا إلا إبليس أبى واستكبر. ثم خلق الله حواء من ضلعه لتكون زوجة وسكناً له. وأسكنهما الجنة وأباح لهما الأكل من جميع ثمارها إلا شجرة واحدة ونهاهما عن الاقتراب منها. فوسوس لهما الشيطان وأكلا من الشجرة فعصيا ربهما. تاب الله عليهما وقبل توبتهما، ثم أهبطهما إلى الأرض ليعمرها ويتكاثر فيها. وتعلم آدم من ربه كلمات التوبة، وتلقى منها الألوهية والعبادة. وعاش آدم على الأرض ألف سنة، ورزق بالعديد من الأبناء، وكان من أشهرهم هابيل وقابيل، وشيث الذي جعله وصياً من بعده. توفي آدم في يوم الجمعة، ودفن في غار بجبل أبي قبيس. وكان آدم نبياً مكلماً، وقد ورد ذكره في القرآن في مواضع كثيرة، وعلم الله الأسماء كلها، وفضله على كثير من خلقه.", quranRefs: ["سورة البقرة (30-39)", "سورة الأعراف (11-25)", "سورة طه (115-123)", "سورة ص (71-85)"] },
                 { name: "إدريس عليه السلام", story: "إدريس عليه السلام هو نبي من أنبياء الله الصالحين، وهو من ذرية آدم، وكان قبل الطوفان. اختلف في نسبه، لكنه معروف بالصدق والصلاح. رفع الله مكانته، وآتاه النبوة والحكمة. كان أول من خط بالقلم، وأول من خاط الثياب ولبسها، وكان كثير الصيام والعبادة. عاش في عصر كان الناس فيه قد ضلوا عن طريق الحق، فدعاهم إلى الله وعبادته وحده، وعلمهم الحكمة والمنطق. رفع الله درجته في السماء الرابعة، كما ورد في حديث الإسراء والمعراج. كان معروفاً بالعلم والفضل، وذكره الله في كتابه العزيز: \"وَاذْكُرْ فِي الْكِتَابِ إِدْرِيسَ إِنَّهُ كَانَ صِدِّيقًا نَبِيًّا. وَرَفَعْنَاهُ مَكَانًا عَلِيًّا\" (مريم 56-57). توفي وهو في السماء بعد أن رفعه الله إليه.", quranRefs: ["سورة مريم (56-57)", "سورة الأنبياء (85)"] },
@@ -66,7 +77,6 @@
             menu: [ { id: 'home', name: 'الرئيسية', icon: 'fa-solid fa-house-chimney' }, { id: 'quran', name: 'المصحف', icon: 'fa-solid fa-book-open' }, { id: 'athkar', name: 'الأذكار', icon: 'fa-solid fa-hands-praying' }, { id: 'prophets', name: 'قصص الأنبياء', icon: 'fa-solid fa-users' }, { id: 'favorites', name: 'المفضلة', icon: 'fa-solid fa-heart' } ],
             allAthkarData: {
     "أذكار النوم": [
-        
         { text: "بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي، وَبِكَ أَرْفَعُهُ، فَإِنْ أَمْسَكْتَ نَفْسِي فَارْحَمْهَا، وَإِنْ أَرْسَلْتَهَا فَاحْفَظْهَا بِمَا تَحْفَظُ بِهِ عِبَادَكَ الصَّالِحِينَ.", originalCount: 1, currentCount: 1 },
         { text: "اللَّهُمَّ خَلَقْتَ نَفْسِي وَأَنْتَ تَوَفَّاهَا، لَكَ مَمَاتُهَا وَمَحْيَاهَا، إِنْ أَحْيَيْتَهَا فَاحْفَظْهَا، وَإِنْ أَمَتَّهَا فَاغْفِرْ لَهَا.", originalCount: 1, currentCount: 1 },
         { text: "اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ.", originalCount: 3, currentCount: 3 },
@@ -118,7 +128,6 @@
         { text: "اللهم قني شر نفسي واعزم لي على أرشد أمري.", originalCount: 1, currentCount: 1 },
         { text: "سبحان الملك القدوس (3 مرات).", originalCount: 3, currentCount: 3 }
     ],
-
     "أذكار الصلاة": [
         { text: "أستغفر الله", originalCount: 3, currentCount: 3 },
         { text: "اللهم أنت السلام ومنك السلام تباركت يا ذا الجلال والإكرام.", originalCount: 1, currentCount: 1 },
@@ -171,7 +180,6 @@
         { text: "اللهم إني أسألك الهدى والسداد.", originalCount: 1, currentCount: 1 },
         { text: "سبحان ربك رب العزة عما يصفون وسلام على المرسلين.", originalCount: 1, currentCount: 1 }
     ],
-
     "أذكار السفر": [
         { text: "الله أكبر، الله أكبر، الله أكبر.", originalCount: 1, currentCount: 1 },
         { text: "سُبْحانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ وَإِنَّا إِلَى رَبِّنَا لَمُنْقَلِبُونَ.", originalCount: 1, currentCount: 1 },
@@ -348,7 +356,9 @@
                 this.practiceMode = false;
                 this.revealedAyahs = [];
                 try {
-                    const textRes = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,ar.muyassar,en.asad`);
+                    // Use selected qiraa for Arabic text
+                    const qiraaId = this.selectedQiraa;
+                    const textRes = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/${qiraaId},ar.muyassar,en.asad`);
                     const textData = await textRes.json();
                     const audioRes = await fetch(`https://api.alquran.cloud/v1/surah/${num}/${this.selectedReciter}`);
                     const audioData = await audioRes.json();
@@ -376,6 +386,13 @@
                 } catch (e) { 
                     console.error("Error loading surah details", e);
                     alert("حدث خطأ في تحميل السورة، يرجى المحاولة مرة أخرى.");
+                }
+            },
+
+            changeQiraa() {
+                localStorage.setItem('holy_qiraa', this.selectedQiraa);
+                if (this.selectedSurah) {
+                    this.loadSurah(this.selectedSurah);
                 }
             },
 
@@ -676,3 +693,4 @@
             }
         }
     }
+    

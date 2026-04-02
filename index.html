@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نور اليقين | تلاوة، أذكار  </title>
+    <title>نور اليقين | تلاوة، أذكار، والقراءات السبع</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+   <link rel="stylesheet" href="style.css">
     <link rel="icon" href="logo.png">
 </head>
 <body class="text-slate-900 dark:text-slate-100 min-h-screen overflow-hidden">
     <div class="mesh-bg"></div>
 
     <div class="flex h-[100dvh] p-2 sm:p-4 md:p-6 gap-2 sm:gap-6 pb-20 sm:pb-6">
-        
+        <!-- Sidebar (desktop) -->
         <aside class="glass rounded-5 w-20 md:w-72 flex-col py-8 transition-all duration-500 hidden sm:flex shrink-0">
             <div class="px-4 md:px-8 mb-12">
                 <div class="flex items-center gap-3 justify-center md:justify-start">
@@ -44,7 +44,7 @@
         </aside>
 
         <main class="flex-1 flex flex-col gap-3 sm:gap-6 overflow-hidden min-w-0">
-            
+            <!-- Header -->
             <header class="glass rounded-5 p-3 sm:p-4 px-4 sm:px-8 flex justify-between items-center min-h-[4rem] sm:h-20 shrink-0">
                 <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                     <div x-show="currentView === 'quran' && !selectedSurah" class="relative w-full max-w-md">
@@ -65,9 +65,9 @@
                 </div>
             </header>
 
+            <!-- Main content -->
             <div class="flex-1 glass rounded-5 overflow-y-auto p-3 sm:p-4 md:p-8 relative">
-                
-                <!-- Home -->
+                <!-- Home view -->
                 <div x-show="currentView === 'home'" x-transition class="space-y-4 sm:space-y-8">
                     <div class="relative h-40 sm:h-64 rounded-5 overflow-hidden group">
                         <img src="https://www.travelzoo.com/images/blog/2021/12/29/iStock-516214379-bluemosque-istanbul.jpg?width=412&spr=3" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="background">
@@ -89,7 +89,7 @@
                     </div>
                 </div>
 
-                <!-- Quran view: surah list or search results -->
+                <!-- Quran view: surah list / search -->
                 <div x-show="currentView === 'quran' && !selectedSurah" x-transition>
                     <div x-show="loadingQuran" class="text-center py-10">
                         <i class="fa-solid fa-spinner fa-spin text-primary text-2xl"></i>
@@ -280,6 +280,7 @@
                 </div>
             </div>
 
+            <!-- Footer player -->
             <footer class="glass rounded-5 p-2 px-4 flex flex-col md:flex-row items-center gap-2 sm:gap-4 shrink-0 z-10">
                 <div class="flex items-center gap-2 sm:gap-3 w-full md:w-1/4">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-5 flex items-center justify-center text-primary shrink-0">
@@ -317,6 +318,7 @@
         </main>
     </div>
 
+    <!-- Mobile bottom nav -->
     <nav class="sm:hidden fixed bottom-0 left-0 w-full glass z-50 rounded-t-2xl flex justify-around items-center p-2 pb-safe border-t border-slate-200 dark:border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
         <template x-for="item in menu" :key="item.id">
             <button @click="currentView = item.id; selectedSurah = null; resetFullSurahTest(); selectedProphet = null" 
@@ -328,6 +330,7 @@
         </template>
     </nav>
 
+    <!-- Settings modal -->
     <div x-show="showSettings" x-transition x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
         <div @click.away="showSettings = false" class="glass max-w-sm w-full p-6 sm:p-8 rounded-5 shadow-2xl">
             <div class="flex justify-between items-center mb-6 sm:mb-8">
@@ -346,6 +349,16 @@
                             <option :value="reciter.id" x-text="reciter.name"></option>
                         </template>
                     </select>
+                </div>
+                <!-- NEW: Qira'at selection -->
+                <div>
+                    <label class="text-xs font-black opacity-50 block mb-3">القراءة (النص العربي)</label>
+                    <select x-model="selectedQiraa" @change="changeQiraa()" class="w-full bg-white dark:bg-slate-800 rounded-5 p-3 text-sm outline-none border border-slate-200 dark:border-white/10 focus:ring-2 ring-primary">
+                        <template x-for="q in qiraatList" :key="q.id">
+                            <option :value="q.id" x-text="q.name"></option>
+                        </template>
+                    </select>
+                    <p class="text-[10px] opacity-40 mt-1">* تغيير القراءة يعيد تحميل السورة الحالية</p>
                 </div>
                 <div>
                     <label class="text-xs font-black opacity-50 block mb-3">وضع التسميع</label>
@@ -372,6 +385,6 @@
         </div>
     </div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

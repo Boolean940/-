@@ -56,9 +56,9 @@
                 </div>
                 <div class="flex items-center gap-3 sm:gap-6 shrink-0 pl-2">
                     <div class="text-left hidden lg:block">
-                        <p class="text-[10px] font-bold opacity-50 uppercase">تاريخ اليوم</p>
-                        <p class="text-sm font-bold truncate" x-text="new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })"></p>
-                    </div>
+    <p class="text-[10px] font-bold opacity-50 uppercase mt-1">التاريخ الهجري</p>
+    <p class="text-sm font-bold truncate" x-text="currentHijriDate"></p>
+</div>
                     <div style="margin-right: 7px" class="w-8 h-8 sm:w-10 sm:h-10 rounded-5 bg-accent/10 flex items-center justify-center text-accent shrink-0">
                         <i class="fa-solid fa-bell text-sm sm:text-base"></i>
                     </div>
@@ -249,7 +249,7 @@
 
                 <!-- Prophets stories -->
                 <div x-show="currentView === 'prophets'" x-transition class="max-w-4xl mx-auto">
-                    <div x-show="!selectedProphet" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div x-show="!selectedProphet" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
                         <template x-for="prophet in prophetsList" :key="prophet.name">
                             <div @click="selectedProphet = prophet" class="glass p-4 rounded-5 cursor-pointer hover:bg-primary/10 transition text-center group">
                                 <div class="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-110 transition">
@@ -350,7 +350,7 @@
                         </template>
                     </select>
                 </div>
-                <!-- NEW: Qira'at selection -->
+                <!-- Qira'at selection -->
                 <div>
                     <label class="text-xs font-black opacity-50 block mb-3">القراءة (النص العربي)</label>
                     <select x-model="selectedQiraa" @change="changeQiraa()" class="w-full bg-white dark:bg-slate-800 rounded-5 p-3 text-sm outline-none border border-slate-200 dark:border-white/10 focus:ring-2 ring-primary">
